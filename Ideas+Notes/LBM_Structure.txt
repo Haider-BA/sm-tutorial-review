@@ -1,0 +1,76 @@
+﻿LBM in general
+* Refer to books [Succi, 2001; Wolf-Gladrow, 2005; Krüger et al., 2016]
+  * From LGCA [Frisch, Hasslacher, Pomeau, 1986]
+  * Lattice BGK [Qian, d'Humieres, Lallemand, 1992]
+  * Shan-Chen model [Shan, Chen, 1993]
+  * Linking LBM to the Boltzmann equation [He, Luo, 1997]
+  * Reviews [Shen, Doolen, 1998; Aidun, Clausen, 2010]
+
+Complex Geometries and Boundary conditions
+* Refer to chapter 11 in [Krüger et al., 2016]
+* Say that LBM is particularly well suited for complex geometries
+  * local kinetic BCs (i.e. BB) very easy to implement compared to BCs in CFD [Cornubert, d'Humieres, Levermore, 1991; Ginzbourg, Adler, 1994; Ladd, 1994; Khirevich, Ginzburg, Tallarek, 2015]
+  * disadvantages: staircase structure (modelling error), numerical slip
+  * however, simplicity of method often preferred and disadvantages accepted in certain situations (quick development time, back-of-the-envelope simulation)
+* There are different ways to handle more highly resolved geometries.
+  * IBB [Bouzidi, Firdaouss, Lallemand, 2001; Lallemand, Luo, 2003; Chun, Ladd, 2007]
+  * multireflection [Ginzburg, d'Humieres, 2003]
+  * gray BB [Noble, Torczynski, 1998; Strack, Cook, 2007; Ginzburg, 2016]
+  * extrapolation methods [Filippova, Hänel, 1998; Mei, Luo, Shyy, 1999; Guo, Zheng, Shi, 2002; Tiwari, Vanka, 2012]
+  * to improve the boundary condition accuracy, the numerical slip needs to be controlled: enhanced collision operators (TRT, MRT) [Ginzburg, d'Humieres, 2003; Pan, Luo, Miller, 2006; Chun, Ladd, 2007; Khirevich, Ginzburg, Tallarek, 2015]
+* Moving geometries
+  * use BB or one of its modifications and a proper refill mechanism [Aidun, Lu, Ding, 1998; Chen, Yu, Lu, Hou, 2014]
+  * use IBM or a similar approach (not covered here in detail but general overview available in [Feng, Michaelides, 2004; Kang, Hassan, 2011; Cheng, Zhu, Zhang, 2014]), IBM is not really an LB boundary condition
+* Another strength is the calculation of wall shear stresses
+  * momentum-exchange method [Ladd, 1994; Mei, Yu, Shyy, Luo, 2002]
+  * local fluid stresses at wall [Stahl, Chopard, Latt, 2010; Matyka, Koza, Miroslaw, 2013]
+
+Boundary conditions for soft boundaries, sub-grid particles and polymers
+* LBM with soft boundaries are important and soft matter applications
+  * Immersed capsules, vesicles and red blood cells [Bagchi, 2007; Zhang, Johnson, Popel, 2007; Sui, Chew, Roy, Low, 2008; Krüger, Varnik, Raabe, 2011; Clausen, Reasor, Aidun, 2011; Gross, Krüger, Varnik, 2014]
+* LBM for immersed sub-grid particles and polymers
+  * polymers [Ahlrichs, Dünweg, 1998; TODO]
+* Unified immersed-boundary methods [Schiller, 2014]
+
+References
+1. Frisch, Hasslacher, Pomeau, 1986
+2. Cornubert, d'Humieres, Levermore, 1991
+3. Qian, d'Humieres, Lallemand, 1992
+4. Shan, Chen, 1993
+5. Ginzbourg, Adler, 1994
+6. Ladd, 1994
+7. He, Luo, 1997
+8. Aidun, Lu, Ding, 1998
+9. Noble, Torczynski, 1998
+10. Filippova, Hänel, 1998
+11. Ahlrichs, Dünweg, 1998
+12. Shen, Doolen, 1998
+13. Mei, Luo, Shyy, 1999
+14. Bouzidi, Firdaouss, Lallemand, 2001
+15. Succi, 2001
+16. Mei, Yu, Shyy, Luo, 2002
+17. Guo, Zheng, Shi, 2002
+18. Ginzburg, d'Humieres, 2003
+19. Lallemand, Luo, 2003
+20. Feng, Michaelides, 2004
+21. Wolf-Gladrow, 2005
+22. Pan, Luo, Miller, 2006
+23. Chun, Ladd, 2007
+24. Strack, Cook, 2007
+25. Bagchi, 2007
+26. Zhang, Johnson, Popel, 2007
+27. Sui, Chew, Roy, Low, 2008
+28. Stahl, Chopard, Latt, 2010
+29. Aidun, Clausen, 2010
+30. Kang, Hassan, 2011
+31. Krüger, Varnik, Raabe, 2011
+32. Clausen, Reasor, Aidun, 2011
+33. Tiwari, Vanka, 2012
+34. Matyka, Koza, Miroslaw, 2013
+35. Chen, Yu, Lu, Hou, 2014
+36. Cheng, Zhu, Zhang, 2014
+37. Schiller, 2014
+38. Gross, Krüger, Varnik, 2014
+39. Khirevich, Ginzburg, Tallarek, 2015
+40. Ginzburg, 2016
+41. Krüger et al., 2016
