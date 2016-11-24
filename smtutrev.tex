@@ -5,12 +5,14 @@
 
 
 \documentclass[8.5pt,twoside,twocolumn]{article}
+
 \oddsidemargin -1.2cm
 \evensidemargin -1.2cm
 \textwidth 18cm
 \headheight 1.0in
 \topmargin -3.5cm
 \textheight 22cm
+
 \usepackage[super,sort&compress,comma]{natbib} 
 \usepackage{mhchem}
 \usepackage{times,mathptmx}
@@ -20,6 +22,7 @@
 \usepackage{balance} 
 \usepackage{color}
 \usepackage{float}
+
 \newcommand{\e}[1]{\times10^{#1}}
 \newcommand{\beq}{\begin{equation}}
 \newcommand{\eeq}{\end{equation}}
@@ -37,6 +40,35 @@
 \usepackage[format=plain,justification=raggedright,singlelinecheck=false,font=small,labelfont=bf,labelsep=space]{caption} 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
+
+\graphicspath{{fig/}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+
+\renewcommand{\vec}[1]{{\ensuremath{\mathchoice
+                     {\mbox{\boldmath$\displaystyle\mathbf{#1}$}}
+                     {\mbox{\boldmath$\textstyle\mathbf{#1}$}}
+                     {\mbox{\boldmath$\scriptstyle\mathbf{#1}$}}
+                     {\mbox{\boldmath$\scriptscriptstyle\mathbf{#1}$}}}}}%
+
+\newcommand{\tens}[1]{{\ensuremath{\mathchoice
+                     {\mbox{$\displaystyle\mathsf{#1}$}}
+                     {\mbox{$\textstyle\mathsf{#1}$}}
+                     {\mbox{$\scriptstyle\mathsf{#1}$}}
+                     {\mbox{$\scriptscriptstyle\mathsf{#1}$}}}}}%
+
+%\newcommand{\Fvec}{\ensuremath{\vec{F}}}
+%\newcommand{\Svec}{\ensuremath{\vec{S}}}
+\newcommand{\rvec}{\ensuremath{\vec{r}}}
+\newcommand{\uvec}{\ensuremath{\vec{u}}}
+\newcommand{\vvec}{\ensuremath{\vec{v}}}
+%\newcommand{\xvec}{\ensuremath{\vec{x}}}
+%\newcommand{\yvec}{\ensuremath{\vec{y}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
@@ -211,73 +243,109 @@ are typically low. However, a scheme for arbitrarily large Schmidt numbers has b
 Further details on DPD can be found in the reviews by Nielsen \cite{Nielsen:2004} and 
 Moeendarbary \cite{Moeendarbary:2009, Moeendarbary:2010}.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Stochastic Rotation Dynamics and Multi-Particle Collision Dynamics}
+%\clearpage
 
-Multi-Particle Collision Dynamics (MPCD) was originally introduced as Stochastic Rotation Dynamics (SRD) 
-by Malevenets and Kapral \cite{Malevanets:1999, Malevanets:2000}.
-MPCD is just like DPD a genuinely mesoscopic simulation method that obeys hydrodynamic conservation laws 
-on the macroscopic level and draws on the idea of CG, but the particle dynamics is simplified.
-It consists of two separate steps: a free streaming step that mimicks the advection of non-interacting particles,
-followed by a collision step, where particles are divided into cells and momentum is exchanged between the 
-particles in each cell.
-The concept of MPCD is similar to the Lattice Boltzmann Method (LBM), but the difference is that no discretised Boltzmann 
-equation is solved and all particles are off-grid.
-The method conserves mass, momentum and energy, is unconditionally stable and an H-theorem exists as 
-detailed by Malevanets \cite{Malevanets:1999} and Ihle \cite{Ihle:2003}.  
-Ihle and Kroll \cite{Ihle:2001} were able to restore Galileian invariance by random shifting and back-shifting
-of the cell position by a fraction of the cell size before and after each collision step.
-
-The streaming step can be written as
-
-\beq
-\mathbf{r}_{i}(t+dt)=\mathbf{r}_{i}(t)+\mathbf{v}_{i}(t)\,dt,
-\eeq
-
-where $\mathbf{r}_{i}$ and $\mathbf{v}_{i}$ are the position and velocity of particle $i$,
-In three dimensions the momentum exchange happens through a rotation of the relative velocity of each particle $i$ 
-with respect to the average velocity in its cell $\mathbf{v}_{i,c}=\mathbf{v}_{i}-\mathbf{u}_c$
-around a randomly chosen axis $\mathbf{a}$ with random angle $\alpha$, symbolised
-through the operator $\cal{R}_{\mathbf{a}, \alpha}$:
-
-\beq
-\mathbf{v}_{i}(t+dt)=\mathbf{u}_c(t)+ {\cal{R}}_{\mathbf{a}, \alpha} \, \mathbf{v}_{i,c}(t)
-\eeq
-
-A drawback of is that the stress tensor in SRD and MPCD is generally not symmetric, which
-leads to a violation of angular momentum convervation, especially for mean free paths that are 
-smaller than half the size of the cells. Noguchi provided a solution for this problem \cite{Noguchi:2007, Goetze:2007}
-by imposing constraints on the new relative velocities of the particles.
-The according update rule for the velocity with conserved angular momentum reads
-
-\beqa
-\mathbf{v}_{i}(t+dt)&=&\mathbf{u}_c(t)+ \mathbf{v}_i^R(t) - \sum_{j\in cell} \mathbf{v}_j^R(t)/ N_c \nonumber\\
-&+&\frac{m}{I} \sum_{j \in cell} [\mathbf{r}_{j,c}(t)\times(\mathbf{v}_j-\mathbf{v}_j^R)]\times \mathbf{r}_{i,c}
-\eeqa
-
-with $m$ as particle mass, $I$ the moment of inertial of the particles in the cell and 
-$\mathbf{r}_{i,c}=\mathbf{r}_{i}-\mathbf{R}_{c}$ as relative postition of particle $i$ with respect to centre
-of mass.
-
-In order to obtain physically meaningful results a careful mapping of simulation paramters onto 
-dimensionless quantities has to be done. This step is essential as without such a mapping it
-may not be possible to address a given physical problem. Padding and Louis \cite{Padding:2006} 
-gave a detailed account of how this can be performed for MPCD. 
- 
-The particle-based algorithm simplifies the application of boundary conditions and delivers  
-a straightforward coupling between solvent and solute through an extension of the collision
-stage to suspended particles. This allows to easily assess the role of 
-hydrodynamic interactions. 
-
-Another advantage is the simplicity at which thermal fluctuations can be incorporated,
-something that has only recently been achieved for LBM in simple \cite{Adhikari:2005} and 
-complex fluids \cite{Gross:2010}. MPCD can be actually seen as SRD with thermostats. 
-This establishes a close relation of MPCD to Discrete Simulation Monte-Carlo techniques with a more 
-efficient multi-particle collision step (see Bird \cite{Bird:1994}) 
-
-A comprehensive review of the MPCD method was published by Gompper et al. \cite{Gompper:2009}.
+\subsection{Multi-Particle Collision Dynamics (MPC)}
 
 
+\subsubsection{Foundations}
+
+Multi-particle collision dynamics, originally introduced by Malevanets and Kapral\cite{Malevanets:1999,Malevanets:2001:Gompper2009} as stochastic rotation dynamics (SRD) is an alternative particle-based mesoscopic method that has become popular in the soft matter domain thanks to the flexibility in handling spatio-temporally varying forces. Like DPD and LBM it reproduces Navier-Stokes hydrodynamic on macroscopic time and length scales. The ``coarse-graining'' of the molecular details is achieved by implementing the interactions through collective collisions that satisfy the local conservation laws. MPC is similar to Bird's Direct Simulation Monte Carlo (DSMC) method \cite{Bird:1994} in that it decomposes the molecular dynamics into discrete streaming and collision steps. Unlike LBM, it maintains a continuous phase-space and satisfies an $H$-theorem.\cite{Malevanets:1999,Ihle:2003} Crucially, MPC is not developed as a time-discrete scheme for integrating a continuous equation of motion, e.g., the Boltzmann equation for LBM or Newton's laws of motion for DPD. It rather defines a discrete dynamics that can be shown to reproduce Navier-Stokes hydrodynamics asymptotically. In this sense, the specific collision rules give rise to constitutive relations on the macroscopic level. The constitutive relations and transport parameters can be tuned by appropriate choice of the collision parameters, and the connection to real physical systems is established by mapping the proper dimensionless numbers (Reynolds number, Peclet number, Schmidt number).\cite{Padding:2006} Since MPC is a particle-based method, it fully incorporates thermal fluctuations without the need to reintroduce them by means of stochastic collisions as in LBM.\cite{Ladd:1994a,Adhikari:2005,Duenweg:2007,Duenweg:2008a,Gross:2010} MPC can easily be switched from a microcanonical ensemble to a canonical ensemble by augmenting the collision rule with an Anderson thermostat. The particle-based algorithm also simplifies the implementation of boundary conditions and provides a straightforward means of coupling solute particles to the MPC fluid. This makes MPC well suited to study complex phenomena in soft matter and active fluids.
+%
+In the following, we summarize the essential elements of MPC. A comprehensive review of MPC was published by Gompper et al.\cite{Gompper:2009}
+
+\subsubsection{Algorithm}
+
+In multi-particle collision dynamics, the fluid consists of idealised point-like particles, and the Navier-Stokes equation emerges from local mass and momentum conservation in the particle ensemble. The update of particle positions and momenta mimics the underlying kinetics and is defined in terms of successive streaming and collision steps. During the streaming step, the particles move ballistically
+%
+\begin{equation}
+\rvec_i(t+h) = \rvec_i(t) + h \vvec_i(t) ,
+\end{equation}
+%
+where $h$ is the time interval between collisions.
+%
+In the collision step, the particles are sorted into cubic collision cells of size $a$, and interactions occure only between particles within the same cell. The particles in each cell exchange momentum while the momentum of the collision cell is conserved
+%
+\begin{equation}
+  \vvec_i(t+h) = \uvec_C(t) + \Delta_i[\rvec_i,\rvec_C,\vvec_i,\uvec_C] ,
+\end{equation}
+%
+where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mass of the cell, respectively, and $\Delta_i$ is a collisional term that does not change $\uvec_C$.
+
+\paragraph{Collision operators}
+
+The original algorithm introduced by Malevanets and Kapral \cite{Malevanets:1999} is referred to as stochastic rotation dynamics (SRD). It consists of a random rotation of the relative velocities $\vvec_{i,C} = \vvec_i-\uvec_C$ of the particles in a cell% around a randomly chosen axis $\vec{\hat{a}}$ by an angle $\alpha$.
+%
+\begin{equation}\label{eq:srd}
+  \Delta_i(t) = \tens{R}^\text{ran} \vvec_{i,C}(t) .
+\end{equation}
+%
+The rotation $\tens{R}_{\vec{\hat{a}},\alpha}$ is commonly implemented as
+%
+\begin{equation}
+  \begin{multlined}
+    \Delta_i(t) = \vvec_{i,C}^{\parallel}(t)
+    + \vvec_{i,C}^{\perp}(t) \cos(\alpha) \\
+    + \left(\vvec_{i,C}^{\perp}(t) \times \vec{\hat{a}}\right) \sin(\alpha) ,
+  \end{multlined}
+\end{equation}
+%
+where $\vec{\hat{a}}$ is a randomly chosen axis, $\alpha$ the rotation angle, and $\vvec_{i,C}^{\parallel}$ and $\vvec_{i,C}^{\perp}$ denote the parallel and perpedicular components of $\Delta\vvec_i$ with respect to the random axis $\vec{\hat{a}}$.
+
+Instead of rotating the relative particle velocities, it is also possible to generate new relative velocities randomly. This is implemented by the algorithm
+%
+\begin{equation}
+\Delta_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} ,
+\end{equation}
+%
+where $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution, and $N_C$ is the number of particles in the collision cell. This collision operator is referred toas MPC-AT$-a$ in the nomenclature of Noguchi.\cite{Noguchi2008}. The random velocity serves as an Anderson-like thermostat to control the temperature, such that the simulation is effectively performed in a canonical ensemble. Consequently, AT collision rules do not conserve energy.
+
+A drawback of both SRD and MPC-AT$-a$ algorithms is that they generate a non-symmetric stress tensor and hence do not conserve angular momentum.\cite{Pooley&Yeomans,and28fromGompper} This can be mitigated by imposing angular momentum conservation as a constraint, which leads to the collision rule
+%
+\begin{equation}
+\begin{multlined}
+\Delta_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} \\
++ m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C} \times \left( \vvec_j - \vvec_j^\text{ran} \right) \right]  \times \rvec_{i,C} ,
+\end{multlined}
+\end{equation}
+%
+where $m$ is the particle mass, $N_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position, and $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution. This collision operator is denoted as MPC-AT+$a$ and like MPC-AT$-a$ it does not conserve energy. A collision operator that conserves both energy and angular momentum can be derived in two dimensions. Various other collision rules have been proposed in the literature\dots TODO
+
+\paragraph{Grid-shifting}
+
+The introduction of the collision cell introduces an artificial reference frame and breaks Galilean invariance. If the mean free path $\lambda=h\sqrt{k_BT/m}$ is smaller than the cell size $a$, repeated collisions between the same particles lead to correlations and the transport coefficients become dependent on imposed flow fields. In order to restore Galilean invariance, Ihle and Kroll introduced a random shift of the cell grid before each collision step.\cite{Ihle2001,and21inGompper} In practice, the shift can be performed by moving all particles by a random vector $\vec{s}$ with components uniformly distributed in $[-a/2,a/2[$ before the collison step and back after the collisions. The grid shift promotes momentum transfer between the cells and thus leads to an additional contribution to the transport coefficients.
+
+\subsubsection{Transport Coefficients}
+
+The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n$ (particles per cell) is then given by
+%
+\begin{equation}
+\eta = \frac{n k_BT h}{\Delta x^d} \left( \frac{n}{n-(d+2)/4}-\frac{1}{2} \right)
++ \frac{m (n-7/5)}{24 \Delta x^{d-2} h} ,
+\end{equation}
+%
+where $k_BT$ is the imposed temperature and $d=2$ is the dimensionality of the system.
+
+
+\paragraph{Parameter choice in practice}
+
+Padding and Louis
+
+\subsubsection{Boundary Conditions}
+\subsubsection{Suspended Objects}
+\subsubsection{Non-ideal fluids and binary mixtures}
+\subsubsection{Quasi-2D Hydrodynamics}
+\subsubsection{Applications}
+
+* discuss strength and weakness in comparison with other methods
+* show some applications (star polymers, vesicles, swimmers...)
+* Marisol thermophoresis
+
+%\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Lattice Boltzmann Method}
 
