@@ -80,7 +80,7 @@
 \noindent\LARGE{\textbf{Mesoscopic Modelling and Simulation of Soft Matter}}
 \vspace{0.6cm}
 
-\noindent\large{\textbf{Oliver Henrich \textit{$^{a}$} and Peter V. Coveney \textit{$^{b}$}}}\vspace{0.5cm}
+\noindent\large{\textbf{Us\textit{$^{a,b,c,d,e}$}}}\vspace{0.5cm}
 %Please note that \ast indicates the corresponding author(s) but no footnote text is required. 
 
 
@@ -101,8 +101,11 @@ First published on the web Xth XXXXXXXXXX 200X}}}
 %Please use \dag to cite the ESI in the main text of the article.
 %If you article does not have ESI please remove the the \dag symbol from the title and the above footnotetext.
 
-\footnotetext{\textit{$^{a}$~EPCC, SUPA, School of Physics and Astronomy, University of Edinburgh,\\King's Buildings, James Clerk Maxwell Building, Peter Guthrie Tait Road, Edinburgh EH9 3FD, UK\\E-mail: ohenrich@epcc.ed.ac.uk}}
-\footnotetext{\textit{$^{b}$~Centre for Computational Science, University College London,\\20 Gordon Street, London WC1H 0AJ, UK}}
+\footnotetext{\textit{$^{a}$~Wherever}}
+\footnotetext{\textit{$^{b}$~We}}
+\footnotetext{\textit{$^{c}$~Tend To}}
+\footnotetext{\textit{$^{d}$~Hang}}
+\footnotetext{\textit{$^{e}$~Around}}
 
 %additional addresses can be cited as above using the lower-case letters, c, d, e... If all authors are from the same address, no letter is required
 
@@ -146,9 +149,7 @@ The scope of this tutorial review is to introduce the most common and versatile 
 provide an overview of their different flavours and a guide for further reading. We also like to 
 round up this review with a glance at the most exciting recent applications.
 
-\section{Mesoscopic Hydrodynamic Methods}
-
-\subsection{Dissipative Particle Dynamics and Brownian Dynamics}
+\section{Dissipative Particle Dynamics}
 
 Dissipative Particle Dynamics (DPD) is a stochastic simulation method specifically designed for soft matter
 and complex fluids. It was first formulated by Hoogerbrugge and Koelman 
@@ -211,7 +212,7 @@ Further details on DPD can be found in the reviews by Nielsen \cite{Nielsen:2004
 Moeendarbary \cite{Moeendarbary:2009, Moeendarbary:2010}.
 
 
-\subsection{Stochastic Rotation Dynamics and Multi-Particle Collision Dynamics}
+\section{Stochastic Rotation Dynamics and Multi-Particle Collision Dynamics}
 
 Multi-Particle Collision Dynamics (MPCD) was originally introduced as Stochastic Rotation Dynamics (SRD) 
 by Malevenets and Kapral \cite{Malevanets:1999, Malevanets:2000}.
@@ -278,7 +279,9 @@ A comprehensive review of the MPCD method was published by Gompper et al. \cite{
 
 
 
-\subsection{Lattice Boltzmann Method}
+\section{Lattice Boltzmann Method}
+
+\subsection{General Remarks}
 
 Of all methods discussed in this review the Lattice Boltzmann Method (LBM) \cite{Succi:2001, Guo:2013} 
 is probably the least intuitively accessible. This is because it has not evolved from an 
@@ -377,13 +380,6 @@ Modelling complex multiphase or multi-component fluids, particularly in complex 
 has been a long-standing endavour of LBM. A number of models have been proposed, which  
 differ in how the physics of the interactions between the different phases and components is
 incorporated. 
-The Shan-Chen model \cite{Shan:1993} is a phenomenological model based on pseudo-potentials,
-which model the microscopic interactions between the different phases or components directly.
-Free energy models have been introduced by Swift et al. \cite{Swift:1995, Swift:1996}.
-They feature a thermodynamic pressure tensor that is derived from free energy functionals. 
-The basic free energy models, although thermodynamically consistent, usually violate Galilean invariance.
-Quite generally all models which involve phase boundaries or interfaces suffer from spurious 
-currents, which can be reduced by using higher-order isotropic schemes \cite{Connington:2012}.
 
 In the the standard LBM algorithm hydrodynamic flow develops without thermal noise, but 
 the fluctuation-dissipation theorem can be satisfied by enforcing consitency with 
@@ -403,8 +399,45 @@ hydrodynamic far-field. Singular forces on the fluid can be regularised with sui
 
 For further reading on LBM we refer to the books of Succi \cite{Succi:2001} and Guo \cite{Guo:2013} and the compehensive reviews of Raabe \cite{Raabe:2004}, D\"unweg and Ladd \cite{Duenweg:2009} and Aidun and Clausen \cite{Aidun:2010}.
 
+\subsection{Free Energy Models}
 
-\subsection{Smoothed Particle Hydrodynamics}
+Multiphase or multi-component flows occur generally in complex fluids such as 
+mixtures of different species, heterogeneous systems like fluid-solid or fluid-gas mixtures 
+or when interfaces are present. 
+Lattice-Boltzmann offers a convenient route to describe the forces  
+between the individual phases and components in a consistent way, and more importantly, on the mesoscopic level. 
+
+Several methods have emerged to date. The Shan-Chen model \cite{Shan:1993} for instance is a 
+phenomenological model which is based on so-called pseudo-potentials that mimick the microscopic 
+interactions between the constituents. These forces enter the algorithm through locally modified equilibrium
+velocities, which in turn lead to modified equilibrium distributions $f_i^{eq}$.
+
+An alternative approach, which we want to discuss in more detail, is based on free energy models,
+as originally introduced by Swift and Yeomans \cite{Swift:1995, Swift:1996}.
+Older versions of this approach were soley based on modified equilibrium distributions with
+additional terms and coefficients that are directly linked to the specific target equation that 
+describes the complex fluid.
+More recently this approach has been superseded by hybrid methods, where the interaction 
+are incorporated though a gradient of a chemical potential or modified stress tensor,
+which is then fed into the algorithm as a local body force on the fluid. 
+In contrast to the Shan-Chen model, free energy models are thermodynamically consistent, 
+which is very useful for an exact control of the thermodynamic
+state close to interfaces or boundaries. It also provides additional insight into the physical behaviour and the 
+often intricate dynamics of complex fluids.
+Moreover, free energy models can be systematically extended when additional components are 
+introduced or new physical effects are to be studied.
+Simple versions of free energy models usually violate Galilean invariance, which can pose 
+serious limitations depending on the problem. 
+
+Galilean invariance be restored by adding appropriate correction terms which cancel out the
+error in the force. This is often omitted for applications at low Reynolds numbers as the violation 
+is then anyway very small.  
+Like other models which involve phase boundaries or interfaces, they also suffer from spurious 
+currents, which can be reduced by using higher-order isotropic schemes \cite{Connington:2012}.
+
+
+
+\section{Smoothed Particle Hydrodynamics}
 
 Smoothed Particle Hydrodynamics (SPH) is another particle-based, mesh free method
 that draws on the idea of replacing the actual fluid with a set of particles.
@@ -469,7 +502,7 @@ is an body external force acting on particle $a$.
 For a more detailed introduction we refer the reader to the two
 excellent reviews by Monaghan \cite{Monaghan:2012} and Koumoutsakos \cite{Koumoutsakos:2005}.
 
-\subsection{Brownian and Langevin Dynamics}
+\section{Brownian and Langevin Dynamics}
 
 \section{Applications}
 
