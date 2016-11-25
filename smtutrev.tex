@@ -247,16 +247,16 @@ Moeendarbary \cite{Moeendarbary:2009, Moeendarbary:2010}.
 
 %\clearpage
 
-\subsection{Multi-Particle Collision Dynamics (MPC)}
+\section{Multi-Particle Collision Dynamics (MPC)}
 
 
-\subsubsection{Foundations}
+\subsection{Foundations}
 
 Multi-particle collision dynamics, originally introduced by Malevanets and Kapral\cite{Malevanets:1999,Malevanets:2001:Gompper2009} as stochastic rotation dynamics (SRD) is an alternative particle-based mesoscopic method that has become popular in the soft matter domain thanks to the flexibility in handling spatio-temporally varying forces. Like DPD and LBM it reproduces Navier-Stokes hydrodynamic on macroscopic time and length scales. The ``coarse-graining'' of the molecular details is achieved by implementing the interactions through collective collisions that satisfy the local conservation laws. MPC is similar to Bird's Direct Simulation Monte Carlo (DSMC) method \cite{Bird:1994} in that it decomposes the molecular dynamics into discrete streaming and collision steps. Unlike LBM, it maintains a continuous phase-space and satisfies an $H$-theorem.\cite{Malevanets:1999,Ihle:2003} Crucially, MPC is not developed as a time-discrete scheme for integrating a continuous equation of motion, e.g., the Boltzmann equation for LBM or Newton's laws of motion for DPD. It rather defines a discrete dynamics that can be shown to reproduce Navier-Stokes hydrodynamics asymptotically. In this sense, the specific collision rules give rise to constitutive relations on the macroscopic level. The constitutive relations and transport parameters can be tuned by appropriate choice of the collision parameters, and the connection to real physical systems is established by mapping the proper dimensionless numbers (Reynolds number, Peclet number, Schmidt number).\cite{Padding:2006} Since MPC is a particle-based method, it fully incorporates thermal fluctuations without the need to reintroduce them by means of stochastic collisions as in LBM.\cite{Ladd:1994a,Adhikari:2005,Duenweg:2007,Duenweg:2008a,Gross:2010} MPC can easily be switched from a microcanonical ensemble to a canonical ensemble by augmenting the collision rule with an Anderson thermostat. The particle-based algorithm also simplifies the implementation of boundary conditions and provides a straightforward means of coupling solute particles to the MPC fluid. This makes MPC well suited to study complex phenomena in soft matter and active fluids.
 %
 In the following, we summarize the essential elements of MPC. A comprehensive review of MPC was published by Gompper et al.\cite{Gompper:2009}
 
-\subsubsection{Algorithm}
+\subsection{Algorithm}
 
 In multi-particle collision dynamics, the fluid consists of idealised point-like particles, and the Navier-Stokes equation emerges from local mass and momentum conservation in the particle ensemble. The update of particle positions and momenta mimics the underlying kinetics and is defined in terms of successive streaming and collision steps. During the streaming step, the particles move ballistically
 %
@@ -274,7 +274,7 @@ In the collision step, the particles are sorted into cubic collision cells of si
 %
 where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mass of the cell, respectively, and $\Delta_i$ is a collisional term that does not change $\uvec_C$.
 
-\paragraph{Collision operators}
+\subsubsection{Collision operators}
 
 The original algorithm introduced by Malevanets and Kapral \cite{Malevanets:1999} is referred to as stochastic rotation dynamics (SRD). It consists of a random rotation of the relative velocities $\vvec_{i,C} = \vvec_i-\uvec_C$ of the particles in a cell% around a randomly chosen axis $\vec{\hat{a}}$ by an angle $\alpha$.
 %
@@ -313,11 +313,11 @@ A drawback of both SRD and MPC-AT$-a$ algorithms is that they generate a non-sym
 %
 where $m$ is the particle mass, $N_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position, and $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution. This collision operator is denoted as MPC-AT+$a$ and like MPC-AT$-a$ it does not conserve energy. A collision operator that conserves both energy and angular momentum can be derived in two dimensions. Various other collision rules have been proposed in the literature\dots TODO
 
-\paragraph{Grid-shifting}
+\subsubsection{Grid-shifting}
 
 The introduction of the collision cell introduces an artificial reference frame and breaks Galilean invariance. If the mean free path $\lambda=h\sqrt{k_BT/m}$ is smaller than the cell size $a$, repeated collisions between the same particles lead to correlations and the transport coefficients become dependent on imposed flow fields. In order to restore Galilean invariance, Ihle and Kroll introduced a random shift of the cell grid before each collision step.\cite{Ihle2001,and21inGompper} In practice, the shift can be performed by moving all particles by a random vector $\vec{s}$ with components uniformly distributed in $[-a/2,a/2[$ before the collison step and back after the collisions. The grid shift promotes momentum transfer between the cells and thus leads to an additional contribution to the transport coefficients.
 
-\subsubsection{Transport Coefficients}
+\subsection{Transport Coefficients}
 
 The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n$ (particles per cell) is then given by
 %
@@ -329,15 +329,15 @@ The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n
 where $k_BT$ is the imposed temperature and $d=2$ is the dimensionality of the system.
 
 
-\paragraph{Parameter choice in practice}
+\subsubsection{Parameter choice in practice}
 
 Padding and Louis
 
-\subsubsection{Boundary Conditions}
-\subsubsection{Suspended Objects}
-\subsubsection{Non-ideal fluids and binary mixtures}
-\subsubsection{Quasi-2D Hydrodynamics}
-\subsubsection{Applications}
+\subsection{Boundary Conditions}
+\subsection{Suspended Objects}
+\subsection{Non-ideal fluids and binary mixtures}
+\subsection{Quasi-2D Hydrodynamics}
+\subsection{Applications}
 
 * discuss strength and weakness in comparison with other methods
 * show some applications (star polymers, vesicles, swimmers...)
@@ -349,18 +349,23 @@ Padding and Louis
 
 \section{Lattice Boltzmann Method}
 
-\subsection{General Remarks}
-
-Of all methods discussed in this review the Lattice Boltzmann Method (LBM) \cite{Succi:2001, Guo:2013} 
-is probably the least intuitively accessible. This is because it has not evolved from an 
-adaptation of molecular dynamics. LBM was originally introduced by McNamara \cite{McNamara:1988} and 
-Benzi \cite{Benzi:1992} as an improvement of older Lattice Gas Cellular Automata,
-which had the goal of finding solutions to the continuum Navier-Stokes equation by 
-means of simplified dynamics. 
-
-The method is rooted in statistical 
-mechanics and the kinetic theory of gases and solves the Boltzmann equation
+Of all methods discussed in this review, the Lattice Boltzmann Method (LBM) \cite{Succi:2001, Guo:2013} 
+is probably the least intuitively accessible. 
+This is because it has not evolved from an adaptation of a flavour of molecular dynamics. 
+The method is rooted in statistical mechanics and the kinetic theory of gases and solves the Boltzmann equation
 in a fully discretised fashion.
+
+LBM was originally introduced by McNamara \cite{McNamara:1988} and 
+Benzi \cite{Benzi:1992} as an improvement of older Lattice Gas Cellular Automata (LGCA),
+which had the goal of finding solutions to the continuum Navier-Stokes equation by 
+means of simplified dynamics. LGCA schemes were characterised by underlying Boolean
+microdynamics of quasi-particles and suffered from statistical noise, exponential complexity
+in the interaction rules of the quasi-particles. The advent of LBM replaced the underlying 
+Boolean rules with vastly simpler collision rules that improved also the stability 
+and flexibilty of the algorithm. 
+ 
+\subsection{Algorithm}
+
 The central quantity is the probability density function
 $f(\mathbf{x}, \mathbf{c}, t)$, which measures the probability of finding
 a particle at position $\mathbf{x}$ at time $t$ with velocity $\mathbf{c}$.
@@ -368,7 +373,7 @@ Under the assumption of molecular chaos $f$ is a one-particle distribution funct
 i.e. the velocities of all colliding particles are uncorrelated and independent of position. 
 For a fluid this assumption is well justified and its dynamic state is defined
 by $f$ as a solution of the Boltzmann equation. 
-In the discrete analogon, the lattice Boltzmann equation (LBE), time, configuration 
+In the discrete analogue, the lattice Boltzmann equation (LBE), time, configuration 
 and momentum space are discretised. 
 The fluid consists of ficticious quasi-particles that perform a consecutive 
 collision and propagation process over the discrete lattice, that can be
@@ -432,6 +437,13 @@ equation is rather obscure at this level, but can be established through a multi
 analysis in a small parameter proportional to the Knudesen number. This procedure is also
 known as Chapman-Enskog expansion \cite{Succi:2001, Guo:2013}.
 
+A consequence of the discreteness of most underlying lattices is that Galilean invariance is generally broken.
+The restriction to small Mach numbers and nearly incompressible flows limits non-Galilean errors to a minimum.
+It is also possible to devise schemes that mitigate this artifact \cite{Chikatamarla:2006, Dellar:2014},
+but they tend to be more intricate and take away something from the simplicity of the basic idea of LBM.
+
+\subsection{Collision Operators}
+
 d'Humi\`eres et al. \cite{dHumieres:2002} generalised the collision operator to multiple relaxation times (MRT), 
 offering increased stability and allow for instance different shear and bulk viscosities, a limitation of 
 the single relaxation time BGK-collision operator.    
@@ -439,22 +451,14 @@ Another fundamental strand in LBM is the development of entropic LBM by Ansumali
 and \"Ottinger \cite{Ansumali:2003}, which is not only unconditional stable, but also posseses an
 H-theorem.
 
-A consequence of the discreteness of most underlying lattices is that Galilean invariance is generally broken.
-The restriction to small Mach numbers and nearly incompressible flows limits non-Galilean errors to a minimum.
-It is also possible to devise schemes that mitigate this artifact \cite{Chikatamarla:2006, Dellar:2014},
-but they tend to be more intricate and take away something from the simplicity of the basic idea of LBM.
-
-Modelling complex multiphase or multi-component fluids, particularly in complex geometries, 
-has been a long-standing endavour of LBM. A number of models have been proposed, which  
-differ in how the physics of the interactions between the different phases and components is
-incorporated. 
-
 In the the standard LBM algorithm hydrodynamic flow develops without thermal noise, but 
 the fluctuation-dissipation theorem can be satisfied by enforcing consitency with 
 fluctuating hydrodynamics. Adhikari \cite{Adhikari:2005} showed that a thermalisation of 
 the additional degrees of freedom that are not directly related to hydrodynamic observables 
 lead to equipartition of the fluctuating energy on all length scales. The scheme has been 
 recently extended from single phase fluids \cite{Duenweg:2007} to binary mixtures \cite{Gross:2010}.
+
+\subsection{Boundary Conditions}
 
 Imposing boundary conditions in LBM needs special care. Ladd and Nguyen \cite{Nguyen:2002} 
 introduced the an implicit bounce-back scheme for mobile boundaries, where overall momentum is conserved but 
@@ -465,15 +469,15 @@ frictional drag force between the particle and the fluid \cite{Ahlrichs:1999}.
 A much lower number of grid points required compared to the bounce-back, but the scheme is only accurate in 
 hydrodynamic far-field. Singular forces on the fluid can be regularised with suitable interpolating functions.  
 
-For further reading on LBM we refer to the books of Succi \cite{Succi:2001} and Guo \cite{Guo:2013} and the compehensive reviews of Raabe \cite{Raabe:2004}, D\"unweg and Ladd \cite{Duenweg:2009} and Aidun and Clausen \cite{Aidun:2010}.
 
 \subsection{Free Energy Models}
 
 Multiphase or multi-component flows occur generally in complex fluids such as 
 mixtures of different species, heterogeneous systems like fluid-solid or fluid-gas mixtures 
-or when interfaces are present. 
-Lattice-Boltzmann offers a convenient route to describe the forces  
-between the individual phases and components in a consistent way, and more importantly, on the mesoscopic level. 
+or when interfaces are present. This has been a long-standing endeavour of LBM, which 
+offers a convenient route to describe the forces  
+between the individual phases and components in a consistent way, and probably even more important, 
+on the mesoscopic level and in complex geometries. 
 
 Several methods have emerged to date. The Shan-Chen model \cite{Shan:1993} for instance is a 
 phenomenological model which is based on so-called pseudo-potentials that mimick the microscopic 
@@ -494,18 +498,49 @@ state close to interfaces or boundaries. It also provides additional insight int
 often intricate dynamics of complex fluids.
 Moreover, free energy models can be systematically extended when additional components are 
 introduced or new physical effects are to be studied.
+
 Simple versions of free energy models usually violate Galilean invariance, which can pose 
 serious limitations depending on the problem. 
-
 Galilean invariance be restored by adding appropriate correction terms which cancel out the
-error in the force. This is often omitted for applications at low Reynolds numbers as the violation 
-is then anyway very small.  
-Like other models which involve phase boundaries or interfaces, they also suffer from spurious 
+error in the force. As stated above, this is often omitted when Reynolds numbers are low.  
+Like other models which involve phase boundaries or interfaces, free energy models also suffer from spurious 
 currents, which can be reduced by using higher-order isotropic schemes \cite{Connington:2012}.
 
+For further reading on LBM we refer to the books of Succi \cite{Succi:2001} and Guo \cite{Guo:2013} and the 
+compehensive reviews of Raabe \cite{Raabe:2004}, D\"unweg and Ladd \cite{Duenweg:2009} and Aidun and Clausen \cite{Aidun:2010}.
+
+\subsection{Applications}
+
+\bit
+\item liquid crystals: Yeomans, Ravnik, Marenduzzo
+\item active matter: Marenduzzo, Yeomans
+\item polymers: D\"unweg
+\item amphiphiles, interfaces, confinement: Harting, Yeomans 
+\item electrokinetics: Pagonabarraga
+\eit
+
+
+\section{Brownian and Langevin Dynamics}
+
+All the above introduced methods allow explicit modelling of the solvent, i.e. solvent-mediated hydrodynamic
+interactions between the solutes are directly resolved. Whilst this is a clear strength of these methods, 
+it also leads to the problem of time-scale separation, or more precisely, to the lack thereof. 
+When simulating large entities on long time scales, the exact solvent dynamics is often not of interest.
+Instead what needs to be retained is some of the physical effects that the much faster solvent molecules have
+on the solute. This can be achieved though omitting the solvent molecules altogether and replacing them 
+by effective friction terms and random forces, giving rise to Brownian or Langevin Dynamics.    
+
+\subsection{Algorithm}
+
+
+
+\section{High-Performance Computing}
 
 
 \section{Smoothed Particle Hydrodynamics}
+
+\com{Perhaps ditch this paragraph. I don't know of anybody in the soft matter community who is using SPH in anger.
+On the other hand, we need more space for the other paragraphs.}
 
 Smoothed Particle Hydrodynamics (SPH) is another particle-based, mesh free method
 that draws on the idea of replacing the actual fluid with a set of particles.
@@ -570,7 +605,6 @@ is an body external force acting on particle $a$.
 For a more detailed introduction we refer the reader to the two
 excellent reviews by Monaghan \cite{Monaghan:2012} and Koumoutsakos \cite{Koumoutsakos:2005}.
 
-\section{Brownian and Langevin Dynamics}
 
 \section{Applications}
 
