@@ -181,6 +181,79 @@ The scope of this tutorial review is to introduce the most common and versatile 
 provide an overview of their different flavours and a guide for further reading. We also like to 
 round up this review with a glance at the most exciting recent applications.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Brownian and Langevin Dynamics}
+
+When simulating large entities, the exact dynamics of the solvent is often not of interest.
+In fact, when the relevant processes occur on time scales much larger than those on which the fast dynamics of 
+the solvent takes place, then a separation of time scales is appropriate.
+What needs to be retained in this case is some kind of physical net effect that the fast solvent molecules have
+on the solute. This can be achieved though a coarse-graining procedure where all solvent molecules are integrated out,
+consequently ommiting them altogether and replacing their influence with an effective friction term and random forces.
+This gives rise to Langevin Dynamics, or in its simpler, overdamped form Brownian Dynamics. 
+
+\subsection{Algorithm}
+
+The Langevin Equation expresses the total force balance for a specific particle $i$:
+
+\beq\label{LE}
+m_i \ddot{{\mathbf{r}}}_i = \mathbf{F}_i = \mathbf{F}_i^C+ \mathbf{F}_{i}^D + \mathbf{F}_{i}^R.
+\eeq
+
+The conservative forces $\mathbf{F}_i^C$ consist of any external, pairwise additive or multi-body forces that act on 
+particle $i$. 
+
+\beq
+\mathbf{F}_i^C = -\frac{\partial V (\{\mathbf{r}\}}{\partial\mathbf{r}_i}).
+\eeq
+
+The drag force $\mathbf{F}_{i}^D$ is proportional to the velocity of the particle, 
+as 
+
+\beq
+\mathbf{F}_{i}^D =-\gamma\; \mathbf{v}_i
+\eeq
+
+with $\gamma$ as drag coefficient. The random force $\mathbf{F}_{i}^R$ is defined as 
+
+\beq
+\mathbf{F}_{i}^R = \sqrt{2 k_B T \gamma}\; \mathbf{\zeta}_i(t)
+\eeq
+
+with $\mathbf{\zeta}_i(t)$ as normally distributed random force whereas each component $\zeta_{\alpha, i}$ 
+has zero mean and unit variance, i.e. $\langle \mathbf{\zeta}_i(t)\rangle =0$ 
+and $\langle \zeta_{\alpha, i} (t) \zeta_{\beta, j}(t')\rangle = \delta(t-t')\delta_{\alpha \beta}\delta_{ij}$.
+
+In its discretised form Eq. \ref{LE} is solved for instance with a velocity Verlet algorithm.
+
+\beqa
+\mathbf{v}_i(t+\frac{dt}{2})&=&\mathbf{v}_i(t)+ \frac{\sqrt{dt}}{2 m_i} \sqrt{2 k_B T \gamma}\; \xi_i \nonumber\\
+&& + \frac{dt}{2 m_i} (\mathbf{F}_i^C(\mathbf{r}(t)) -\gamma\; \mathbf{v}_i(t))\label{vv1} \\
+\mathbf{r}_i(t+dt)&=& \mathbf{r}_i(t) + dt\;\mathbf{v}_i(t+\frac{dt}{2})\label{vv2}\\ 
+\mathbf{v}_i(t+dt)&=& \mathbf{v}_i(t+\frac{dt}{2}) + \frac{\sqrt{dt}}{2 m_i} \sqrt{2 k_B T \gamma}\; \xi_i\nonumber\\
+&& + \frac{dt}{2 m_i} (\mathbf{F}_i^C(\mathbf{r}(t+dt)) -\gamma\; \mathbf{v}_i(t+dt/2))\label{vv3}
+\eeqa
+
+$\xi_i$ is another normally distributed random process with zero mean and unit variance, 
+so that $\langle \xi_i \rangle=0$ and $\langle \xi_i \xi_j\rangle=\delta_{ij}$. 
+Note the square root of the timestep which appears in Eqs. \ref{vv1} and \ref{vv3} 
+when the stochastic Wiener process in the Langevin Equation is discretised.
+
+\subsection{Hydrodynamic Interactions}
+
+Solvent-mediated hydrodynamic interactions between the solute particles are usually not included
+ in Langevin dynamics. But these can be reintroduced by means of the Oseen tensor. If inertia 
+terms are discarded, then Eq. \ref{LD} can be rephrased into
+
+\beq
+\dot{\mathbf{r}}_i = \frac{1}{\gamma} \mathbf{F}_i^C +\sqrt{\frac{2 k_B T}{\gamma}} \mathbf{\zeta}_i(t).
+\eeq
+
+The basic idea is now to introduce a mobility tensor which relates all conservative forces acting on particle $j$ to 
+additional hydrodynamic forces on particle $i$. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Dissipative Particle Dynamics}
 
 Dissipative Particle Dynamics (DPD) is a stochastic simulation method specifically designed for soft matter
@@ -191,25 +264,27 @@ The basic idea is akin to coarse-grained molecular dynamics with atoms agglomera
 entities or 'beads' that interact via soft forces. 
 
 The beads are subject to conservative forces that always contain a soft-core repulsion as well as pairwise drag
-or friction forces and random forces. The force ballance can be summarised as
+or friction forces and random forces. The force ballance for bead $i$ is slightly different than in Eq. \ref{LE} as it 
+runs over particle pairs $(i,j)$:
 
 \beq
-m_i \ddot{{\mathbf{r}}}_i=\mathbf{F}_i^C+\sum_{i\neq j}\mathbf{F}_{ij}^D + \mathbf{F}_{ij}^R
+m_i \ddot{{\mathbf{r}}}_i=\mathbf{F}_i^C+\sum_{i\neq j}\mathbf{F}_{i j}^D + \sum_{i\neq j}\mathbf{F}_{i j}^R
 \eeq
 
-with dissipative forces between a pair of particles $i-j$ 
+The functional forms are also slightly different. For instance the conservative forces $\mathbf{F}_i^C$ always contains a soft-core repulsion. 
+The drag force depends on the relative velocity $\mathbf{v}_{ij} = \mathbf{v}_i - \mathbf{v}_j$ of the beads,
 
 \beq
-\mathbf{F}_{ij}^D=-\gamma\,\omega(|\mathbf{r}_{ij}|)\frac{(\mathbf{r}_{ij}\cdot\mathbf{v}_{ij})\mathbf{r}_{ij}}{|\mathbf{r}_{ij}|}
+\mathbf{F}_{ij}^D=-\gamma\,\omega(|\mathbf{r}_{ij}|)\frac{(\mathbf{r}_{ij}\cdot\mathbf{v}_{ij})\mathbf{r}_{ij}}{|\mathbf{r}_{ij}|},
 \eeq
 
-and random forces 
+whereas the random forces are given by
 
 \beq
-\mathbf{F}_{ij}^R=\sqrt{2 k_B T \gamma\, \omega(|\mathbf{r}_{ij}|)} \frac{\mathbf{r}_{ij}}{|\mathbf{r}_{ij}|}\eta_{ij}.
+\mathbf{F}_{ij}^R=\sqrt{2 k_B T \gamma\, \omega(|\mathbf{r}_{ij}|)} \frac{\mathbf{r}_{ij}}{|\mathbf{r}_{ij}|}\;\xi_{ij}(t).
 \eeq
 
-The quantity $\eta$ is a Gaussian random number with zero mean and unit variance. $\gamma$ is a friciton coefficient and
+The quantity $\xi_{i j}$ is a Gaussian random number with zero mean and unit variance. $\gamma$ is a friciton coefficient and
 $\omega(|\mathbf{r}_{ij}|)$ a decaying weighing function with cutoff. 
 Note that contrary to Brownian dynamics, where each particles requires an independent random force in DPD the 
 distance-dependent friction forces for each pair of particles entail distance dependent random forces 
@@ -245,10 +320,21 @@ Moeendarbary \cite{Moeendarbary:2009, Moeendarbary:2010}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%\clearpage
+Smoothed Particle Hydrodynamics (SPH) is another particle-based, mesh free method
+that draws on the idea of replacing the actual fluid with a set of particles.
+It has been originally invented by Dingold, Monaghan and Lucy
+with astrophysical applications in mind, but is now gaining importance for soft matter
+problems involving free surface flow.
+SPH starts neither from a statistical description as LBM does, nor does it
+build on a MD-type algorithm like DPD, BD or MPCD. In SPH hydrodynamic observables 
+and their spatial derivatives are discretised by means of 
+weight functions. For a more detailed introduction we refer the reader to the two
+excellent reviews by Monaghan \cite{Monaghan:2012} and Koumoutsakos \cite{Koumoutsakos:2005}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \section{Multi-Particle Collision Dynamics (MPC)}
-
 
 \subsection{Foundations}
 
@@ -261,20 +347,20 @@ In the following, we summarize the essential elements of MPC. A comprehensive re
 In multi-particle collision dynamics, the fluid consists of idealised point-like particles, and the Navier-Stokes equation emerges from local mass and momentum conservation in the particle ensemble. The update of particle positions and momenta mimics the underlying kinetics and is defined in terms of successive streaming and collision steps. During the streaming step, the particles move ballistically
 %
 \begin{equation}
-\rvec_i(t+h) = \rvec_i(t) + h \vvec_i(t) ,
+\rvec_i(t+dt) = \rvec_i(t) + dt \,\vvec_i(t) ,
 \end{equation}
 %
-where $h$ is the time interval between collisions.
+where $dt$ is the time interval between collisions.
 %
 In the collision step, the particles are sorted into cubic collision cells of size $a$, and interactions occure only between particles within the same cell. The particles in each cell exchange momentum while the momentum of the collision cell is conserved
 %
 \begin{equation}
-  \vvec_i(t+h) = \uvec_C(t) + \Delta_i[\rvec_i,\rvec_C,\vvec_i,\uvec_C] ,
+  \vvec_i(t+dt) = \uvec_C(t) + \Delta_i[\rvec_i,\rvec_C,\vvec_i,\uvec_C] ,
 \end{equation}
 %
 where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mass of the cell, respectively, and $\Delta_i$ is a collisional term that does not change $\uvec_C$.
 
-\subsubsection{Collision operators}
+\subsubsection{Collision operators }
 
 The original algorithm introduced by Malevanets and Kapral \cite{Malevanets:1999} is referred to as stochastic rotation dynamics (SRD). It consists of a random rotation of the relative velocities $\vvec_{i,C} = \vvec_i-\uvec_C$ of the particles in a cell% around a randomly chosen axis $\vec{\hat{a}}$ by an angle $\alpha$.
 %
@@ -313,7 +399,7 @@ A drawback of both SRD and MPC-AT$-a$ algorithms is that they generate a non-sym
 %
 where $m$ is the particle mass, $N_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position, and $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution. This collision operator is denoted as MPC-AT+$a$ and like MPC-AT$-a$ it does not conserve energy. A collision operator that conserves both energy and angular momentum can be derived in two dimensions. Various other collision rules have been proposed in the literature\dots TODO
 
-\subsubsection{Grid-shifting}
+\subsubsection{Grid-shifting }
 
 The introduction of the collision cell introduces an artificial reference frame and breaks Galilean invariance. If the mean free path $\lambda=h\sqrt{k_BT/m}$ is smaller than the cell size $a$, repeated collisions between the same particles lead to correlations and the transport coefficients become dependent on imposed flow fields. In order to restore Galilean invariance, Ihle and Kroll introduced a random shift of the cell grid before each collision step.\cite{Ihle2001,and21inGompper} In practice, the shift can be performed by moving all particles by a random vector $\vec{s}$ with components uniformly distributed in $[-a/2,a/2[$ before the collison step and back after the collisions. The grid shift promotes momentum transfer between the cells and thus leads to an additional contribution to the transport coefficients.
 
@@ -329,7 +415,7 @@ The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n
 where $k_BT$ is the imposed temperature and $d=2$ is the dimensionality of the system.
 
 
-\subsubsection{Parameter choice in practice}
+\subsubsection{Parameter choice in practice }
 
 Padding and Louis
 
@@ -342,8 +428,6 @@ Padding and Louis
 * discuss strength and weakness in comparison with other methods
 * show some applications (star polymers, vesicles, swimmers...)
 * Marisol thermophoresis
-
-%\clearpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -519,91 +603,11 @@ compehensive reviews of Raabe \cite{Raabe:2004}, D\"unweg and Ladd \cite{Duenweg
 \item electrokinetics: Pagonabarraga
 \eit
 
-
-\section{Brownian and Langevin Dynamics}
-
-All the above introduced methods allow explicit modelling of the solvent, i.e. solvent-mediated hydrodynamic
-interactions between the solutes are directly resolved. Whilst this is a clear strength of these methods, 
-it also leads to the problem of time-scale separation, or more precisely, to the lack thereof. 
-When simulating large entities on long time scales, the exact solvent dynamics is often not of interest.
-Instead what needs to be retained is some of the physical effects that the much faster solvent molecules have
-on the solute. This can be achieved though omitting the solvent molecules altogether and replacing them 
-by effective friction terms and random forces, giving rise to Brownian or Langevin Dynamics.    
-
-\subsection{Algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
 \section{High-Performance Computing}
-
-
-\section{Smoothed Particle Hydrodynamics}
-
-\com{Perhaps ditch this paragraph. I don't know of anybody in the soft matter community who is using SPH in anger.
-On the other hand, we need more space for the other paragraphs.}
-
-Smoothed Particle Hydrodynamics (SPH) is another particle-based, mesh free method
-that draws on the idea of replacing the actual fluid with a set of particles.
-It has been originally invented by Dingold, Monaghan and Lucy
-with astrophysical applications in mind, but is now gaining importance for soft matter
-problems.
-
-SPH starts neither from a statistical description as LBM does, nor does it
-build on a MD-type algorithm like DPD, BD or MPCD. In SPH hydrodynamic observables 
-and their spatial derivatives are discretised by means of 
-weight functions.
-
-A hydrodynamic variable $A$, e.g. the density or velocity can be represented 
-through an integral interpolant like  
-
-\beq
-A(\mathbf{r})=\int A(\mathbf{r'}) W(\mathbf{r}-\mathbf{r'},h ) d\mathbf{r'}
-\eeq
-
-using a kernel $W$ which is a normalised, analytical function of $\mathbf{r}-\mathbf{r'}$,
- and becomes a $\delta-$functional for $h\to0$.  
-
-The interpolated quantity can be discretised and approximated by replacing the integral 
-as sum over a finite number of SPH-particles with mass $m_b$ and density $\rho_b$.
-
-\beq
-A(\mathbf{r})\simeq A_a= \sum_b \frac{m_b\, A(\mathbf{r}_b)}{\rho_b} \;W(\mathbf{r}_a-\mathbf{r}_b, h)
-\eeq
-
-In the same spirit the first derivative of $A$ is approximated as
-
-\beq
-\mathbf{\nabla}_a A_a= \sum_b \frac{m_b\, A(\mathbf{r}_b)}{\rho_b} \;\mathbf{\nabla}_aW(\mathbf{r}_a-\mathbf{r}_b, h).
-\eeq
-
-These discrete forms can be used directly in the hydrodynamic conservation laws.
-In a Lagrangian frame that moves with the fluid the total rate of 
-change of mass density can be decomposed using the continuity equation:
-
-\beq
-\frac{d\rho}{dt}=\frac{\partial\rho}{\partial t} + \mathbf{v}\cdot\mathbf{\nabla}\rho =-\mathbf{\nabla}(\rho \mathbf{v})+\mathbf{v}\cdot\mathbf{\nabla}\rho.
-\eeq
-
-The discretised form of the rate of change at particle $a$ and acceleration of particle $a$ are
-
-\beq
-\frac{d\rho_a}{dt}=\sum_b m_b (\mathbf{v}_a-\mathbf{v}_b)\,\mathbf{\nabla}_a W(\mathbf{r}_a-\mathbf{r}_b,h)
-\eeq
-
-and
-
-\beq
-\frac{d\mathbf{v}_a}{dt}=-\sum_b m_b (\frac{p_a}{\rho_a^2}+\frac{p_b}{\rho_b^2} + \pi_{a b})\,\mathbf{\nabla}_a W(\mathbf{r}_a-\mathbf{r}_b,h) + \mathbf{g}_a.
-\eeq	
-The quantitiy $p_a$ is the scalar pressure at particle $a$ and 
-related to the density $\rho_a$ via an equation of state, for 
-which various forms can be assumed. $\pi_{a b}$ is the viscous 
-stress tensor, for which also various forms exist that combine
-relative distances and velocities between the particles. $\mathbf{g}_a$ 
-is an body external force acting on particle $a$.
-
-For a more detailed introduction we refer the reader to the two
-excellent reviews by Monaghan \cite{Monaghan:2012} and Koumoutsakos \cite{Koumoutsakos:2005}.
 
 
 \section{Applications}
