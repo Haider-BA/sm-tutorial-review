@@ -22,6 +22,7 @@
 \usepackage{balance} 
 \usepackage{color}
 \usepackage{float}
+\usepackage{array}
 
 \newcommand{\e}[1]{\times10^{#1}}
 \newcommand{\beq}{\begin{equation}}
@@ -62,10 +63,11 @@
 
 %\newcommand{\Fvec}{\ensuremath{\vec{F}}}
 %\newcommand{\Svec}{\ensuremath{\vec{S}}}
+\newcommand{\jvec}{\ensuremath{\vec{j}}}
 \newcommand{\rvec}{\ensuremath{\vec{r}}}
 \newcommand{\uvec}{\ensuremath{\vec{u}}}
 \newcommand{\vvec}{\ensuremath{\vec{v}}}
-%\newcommand{\xvec}{\ensuremath{\vec{x}}}
+\newcommand{\xvec}{\ensuremath{\vec{x}}}
 %\newcommand{\yvec}{\ensuremath{\vec{y}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -333,12 +335,11 @@ excellent reviews by Monaghan \cite{Monaghan:2012} and Koumoutsakos \cite{Koumou
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 \section{Multi-Particle Collision Dynamics (MPC)}
 
 \subsection{Foundations}
 
-Multi-particle collision dynamics, originally introduced by Malevanets and Kapral\cite{Malevanets:1999,Malevanets:2001:Gompper2009} as stochastic rotation dynamics (SRD) is an alternative particle-based mesoscopic method that has become popular in the soft matter domain thanks to the flexibility in handling spatio-temporally varying forces. Like DPD and LBM it reproduces Navier-Stokes hydrodynamic on macroscopic time and length scales. The ``coarse-graining'' of the molecular details is achieved by implementing the interactions through collective collisions that satisfy the local conservation laws. MPC is similar to Bird's Direct Simulation Monte Carlo (DSMC) method \cite{Bird:1994} in that it decomposes the molecular dynamics into discrete streaming and collision steps. Unlike LBM, it maintains a continuous phase-space and satisfies an $H$-theorem.\cite{Malevanets:1999,Ihle:2003} Crucially, MPC is not developed as a time-discrete scheme for integrating a continuous equation of motion, e.g., the Boltzmann equation for LBM or Newton's laws of motion for DPD. It rather defines a discrete dynamics that can be shown to reproduce Navier-Stokes hydrodynamics asymptotically. In this sense, the specific collision rules give rise to constitutive relations on the macroscopic level. The constitutive relations and transport parameters can be tuned by appropriate choice of the collision parameters, and the connection to real physical systems is established by mapping the proper dimensionless numbers (Reynolds number, Peclet number, Schmidt number).\cite{Padding:2006} Since MPC is a particle-based method, it fully incorporates thermal fluctuations without the need to reintroduce them by means of stochastic collisions as in LBM.\cite{Ladd:1994a,Adhikari:2005,Duenweg:2007,Duenweg:2008a,Gross:2010} MPC can easily be switched from a microcanonical ensemble to a canonical ensemble by augmenting the collision rule with an Anderson thermostat. The particle-based algorithm also simplifies the implementation of boundary conditions and provides a straightforward means of coupling solute particles to the MPC fluid. This makes MPC well suited to study complex phenomena in soft matter and active fluids.
+Multi-particle collision dynamics, originally introduced by Malevanets and Kapral\cite{Malevanets:1999,Malevanets:2001:Gompper2009} as stochastic rotation dynamics (SRD) is an alternative particle-based mesoscopic method that has become popular in the soft matter domain thanks to the flexibility in handling spatio-temporally varying forces. Like DPD and LBM it reproduces Navier-Stokes hydrodynamic on macroscopic time and length scales. The ``coarse-graining'' of the molecular details is achieved by implementing the interactions through collective collisions that satisfy the local conservation laws. MPC is similar to Bird's Direct Simulation Monte Carlo (DSMC) method \cite{Bird:1994} in that it decomposes the molecular dynamics into discrete streaming and collision steps. Unlike LBM, it maintains a continuous phase-space and satisfies an $H$-theorem.\cite{Malevanets:1999,Ihle:2003} Crucially, MPC is not developed as a time-discrete scheme for integrating a continuous equation of motion, e.g., the Boltzmann equation for LBM or Newton's laws of motion for DPD. It rather defines a discrete dynamics that can be shown to reproduce Navier-Stokes hydrodynamics asymptotically. In this sense, the specific collision rules give rise to constitutive relations on the macroscopic level. The constitutive relations and transport parameters can be tuned by appropriate choice of the collision parameters, and the connection to real physical systems is established by mapping the proper dimensionless numbers (Reynolds number, Peclet number, Schmidt number).\cite{Padding:2006} Since MPC is a particle-based method, it fully incorporates thermal fluctuations without the need to reintroduce them by means of stochastic collisions as in LBM.\cite{Ladd:1994a,Adhikari:2005,Duenweg:2007,Duenweg:2008a,Gross:2010} MPC can easily be switched from a microcanonical ensemble to a canonical ensemble by augmenting the collision rule with an Anderson thermostat. The particle-based algorithm also simplifies the implementation of boundary conditions and provides a straightforward means of coupling solute particles to the MPC fluid. This makes MPC well suited to study complex phenomena in soft matter both in and out of equilibrium.
 %
 In the following, we summarize the essential elements of MPC. A comprehensive review of MPC was published by Gompper et al.\cite{Gompper:2009}
 
@@ -347,20 +348,20 @@ In the following, we summarize the essential elements of MPC. A comprehensive re
 In multi-particle collision dynamics, the fluid consists of idealised point-like particles, and the Navier-Stokes equation emerges from local mass and momentum conservation in the particle ensemble. The update of particle positions and momenta mimics the underlying kinetics and is defined in terms of successive streaming and collision steps. During the streaming step, the particles move ballistically
 %
 \begin{equation}
-\rvec_i(t+dt) = \rvec_i(t) + dt \,\vvec_i(t) ,
+\rvec_i(t+h) = \rvec_i(t) + h \vvec^*_i(t) ,
 \end{equation}
 %
-where $dt$ is the time interval between collisions.
+where $h$ is the time interval between collisions.
 %
 In the collision step, the particles are sorted into cubic collision cells of size $a$, and interactions occure only between particles within the same cell. The particles in each cell exchange momentum while the momentum of the collision cell is conserved
 %
-\begin{equation}
-  \vvec_i(t+dt) = \uvec_C(t) + \Delta_i[\rvec_i,\rvec_C,\vvec_i,\uvec_C] ,
+\begin{equation}\label{eq:mpc-collisions}
+  \vvec^*_i(t) = \uvec_C(t) + \Delta_i(t) ,
 \end{equation}
 %
-where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mass of the cell, respectively, and $\Delta_i$ is a collisional term that does not change $\uvec_C$.
+where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mass of the cell, respectively, and $\Delta_i$ is a collisional term that does not change $\uvec_C$. The center of mass velocity in MPC plays a similar role as the equilibrium distribution in LBM. If the collisional term is set to zero $\Delta_i=0$, all particle velocities ``relax'' to the center of mass velocity instantaneously.
 
-\subsubsection{Collision operators }
+\paragraph{Collision operators}
 
 The original algorithm introduced by Malevanets and Kapral \cite{Malevanets:1999} is referred to as stochastic rotation dynamics (SRD). It consists of a random rotation of the relative velocities $\vvec_{i,C} = \vvec_i-\uvec_C$ of the particles in a cell% around a randomly chosen axis $\vec{\hat{a}}$ by an angle $\alpha$.
 %
@@ -382,7 +383,7 @@ where $\vec{\hat{a}}$ is a randomly chosen axis, $\alpha$ the rotation angle, an
 
 Instead of rotating the relative particle velocities, it is also possible to generate new relative velocities randomly. This is implemented by the algorithm
 %
-\begin{equation}
+\begin{equation}\label{eq:MPC-AT-a}
 \Delta_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} ,
 \end{equation}
 %
@@ -393,41 +394,245 @@ A drawback of both SRD and MPC-AT$-a$ algorithms is that they generate a non-sym
 \begin{equation}
 \begin{multlined}
 \Delta_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} \\
-+ m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C} \times \left( \vvec_j - \vvec_j^\text{ran} \right) \right]  \times \rvec_{i,C} ,
++ m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_j(t) - \vvec_j^\text{ran} \right) \right]  \times \rvec_{i,C}(t) ,
 \end{multlined}
 \end{equation}
 %
 where $m$ is the particle mass, $N_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position, and $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution. This collision operator is denoted as MPC-AT+$a$ and like MPC-AT$-a$ it does not conserve energy. A collision operator that conserves both energy and angular momentum can be derived in two dimensions. Various other collision rules have been proposed in the literature\dots TODO
 
-\subsubsection{Grid-shifting }
+\paragraph{Grid-shifting}
 
-The introduction of the collision cell introduces an artificial reference frame and breaks Galilean invariance. If the mean free path $\lambda=h\sqrt{k_BT/m}$ is smaller than the cell size $a$, repeated collisions between the same particles lead to correlations and the transport coefficients become dependent on imposed flow fields. In order to restore Galilean invariance, Ihle and Kroll introduced a random shift of the cell grid before each collision step.\cite{Ihle2001,and21inGompper} In practice, the shift can be performed by moving all particles by a random vector $\vec{s}$ with components uniformly distributed in $[-a/2,a/2[$ before the collison step and back after the collisions. The grid shift promotes momentum transfer between the cells and thus leads to an additional contribution to the transport coefficients.
+The introduction of the collision cell introduces an artificial reference frame and breaks Galilean invariance. If the mean free path $\lambda=h\sqrt{k_BT/m}$ is smaller than the cell size $a$, repeated collisions between the same particles lead to correlations and the transport coefficients become dependent on imposed flow fields. In order to restore Galilean invariance, Ihle and Kroll introduced a random shift of the cell grid before each collision step.\cite{Ihle2001,and21inGompper} In practice, the shift can be performed by moving all particles by a random vector $\vec{s}$ with components uniformly distributed in $[-a/2,a/2[$ before the collison step and back after the collisions. The grid shift promotes momentum transfer between the cells and thus can lead to additional correlations in the transport coefficients.\cite{someone}
 
 \subsection{Transport Coefficients}
 
-The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n$ (particles per cell) is then given by
+Local hydrodynamic fields are defined for each MPC cell as
+%
+\begin{align}
+\rho(\xvec_C) = \frac{m}{a^3} \sum_{i\in C} 1 , \\
+\jvec(\xvec_C) = \frac{m}{a^3} \sum_{i \in C} \vvec_i , \\
+e(\xvec_C) = \frac{m}{a^3} \sum_{i \in C} \frac{\vvec_i^2}{2} .
+\end{align}
+%
+These coarse-grained fields are the slow variables of the discrete-time dynamics that exhibit hydrodynamic behaviour on macroscopic time and length scales.
+
+\paragraph{Equation of State} TODO
+
+The corresponding transport coefficients emerge from the micro-scale transport during streaming and collisions and hence contain both kinetic and collisional contributions. There are two possible routes to derive transport coefficients of the MPC fluid. The first uses a projection-operator formalism and relates the transport coefficients to equilibrium fluctuations of the hydrodynamic fields. The explicit Green-Kubo relations depend on the collision rule. Expressions for the SRD collision operator were obtained by \dots TODO
+
+In the second approach, transport coefficients are determined through analysis of non-equilibrium steady-state situations. By virtue of the fluctuation-dissipation theorem, the linear response of the system to imposed gradients allows to calculate transport coefficients that are identical to the ones obtained from equilibrium fluctuations. This approach has been used by \dots TODO
+
+Here we outline the latter approach for the MPC-AT collision algorithm. Expressions for other common collision rules are given in table~\ref{}. TODO
+
+\paragraph{Self-Diffusion Coefficient}
+
+The self-diffusion coefficient $D$ can be obtained from  the velocity correlation function
 %
 \begin{equation}
-\eta = \frac{n k_BT h}{\Delta x^d} \left( \frac{n}{n-(d+2)/4}-\frac{1}{2} \right)
-+ \frac{m (n-7/5)}{24 \Delta x^{d-2} h} ,
+D= \frac{h}{2} \left\langle v_x^2(0) \right\rangle + h \sum_{k=1}^{\infty} \left\langle v_x(kh) v_x(0) \right\rangle .
 \end{equation}
 %
-where $k_BT$ is the imposed temperature and $d=2$ is the dimensionality of the system.
+The correlation $\left\langle v_x v_x \right\rangle$ is reduced by the streaming step and can be written as $\left\langle v_x^* v_x \right\rangle = (1-s) \left\langle v_x^2 \right\rangle$ or $\left\langle v_x(kh) v_x(0) \right\rangle=(1-s)^k \left\langle v_x^2 \right\rangle$.
+%
+%$A$ is characteristic of the collision algorithm and the explicit values were calculated by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. The function $f$ averages over density fluctuations and is given as
+%
+%\begin{equation}
+%f = \sum_{N_C=1}^{\infty} \left(1-\frac{1}{N_C}\right) \frac{N_C}{M} P(N_C) = \frac{M-1+\exp(-M)}{M} ,
+%\end{equation}
+%
+%where $M=\langle N_C \rangle$ and $P(N_C)=M^{N_C}/N_C! \exp(-M)$ is Poisson-distributed.
+%
+Using (\ref{eq:mpc-collisions}) and averaging over cell occupation number $N_C$ we obtain
+%
+\begin{equation}
+s = \frac{A\left(M-1+\exp(-M)\right)}{M} ,
+\end{equation}
+%
+where $M=\langle N_C \rangle$ and $N_C$ is Poisson distributed. $A$ is characteristic of the collision algorithm and explicit values were calculated by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. The self-diffusion coefficient is then
+%
+\begin{equation}
+  D %= \frac{k_B T h}{m} \left( \sum_{k=0}^{\infty} (1 -s)^k - \frac{1}{2} \right)
+  = \frac{k_B T h}{m} \left( \frac{1}{s} - \frac{1}{2} \right) .
+\end{equation}
 
+\begin{table}\centering
+\begin{tabular}{l|l|l}
+  \hline
+  & A & B \\
+  \hline
+  SRD & $\frac{2}{d}(1-\cos\alpha)$ & $\frac{2}{5}(2-\cos\alpha-\cos2\alpha)$ \\
+  MPC-AT$-a$ & 1 & 1 \\
+  \hline
+\end{tabular}
+\caption{Correlation factors for MPC collision algorithms.}
+\label{tab:mpc-correlation-factors}
+\end{table}
 
-\subsubsection{Parameter choice in practice }
+\paragraph{Shear Viscosity}
 
-Padding and Louis
+To determine the shear viscosity, we consider a steady linear shear flow and analyze the force acting on a laminar plane. 
+%
+The kinetic contribution results from the momentum of particles crossing the plane during a time step $h$. The stress can thus be written as\cite{Kikuchi:2003,Noguchi:2008}
+%
+\begin{equation}\label{eq:MPCstress1}
+\sigma^\text{kin}_{xy} = \rho \left( \frac{\dot{\gamma} h}{2} \left\langle v_y^2 \right\rangle - \left\langle v_x v_y \right\rangle \right) ,
+\end{equation}
+%
+where the average is taken using the probability distribution $P(v_x-\dot{\gamma}y,v_y)$. Due to the shear flow the correlations $\left\langle v_xv_y \right\rangle$ are non-zero and are changed by both the streaming and collision steps.
+%
+The streaming step reduces the correlations $\left\langle v_xv_y \right\rangle_{t+h} = \left\langle v_x^*v_y^* \right\rangle_t - h \dot{\gamma} \left\langle v_y^2 \right\rangle$.
+%
+The collision step also reduces the correlations, and after averaging over density fluctuations we have $\left\langle v_x^*v_y^* \right\rangle_t = (1-f) \left\langle v_xv_y \right\rangle_t$ where $f$ depends on the collision rule. In steady-state the combined effect of streaming and collisions leads to the self-consistency condition $\left\langle v_xv_y \right\rangle = (1-f) \left( \left\langle v_xv_y \right\rangle - h \dot{\gamma} \left\langle v_y^2 \right\rangle \right)$, which can be solved and substituted into the stress (\ref{eq:MPCstress1})
+%
+\begin{equation}
+\sigma^\text{kin}_{xy} = \rho \dot{\gamma} h \left\langle v_y^2 \right\rangle \left( \frac{1}{f} -\frac{1}{2} \right) .
+\end{equation}
+%
+Using (\ref{eq:mpc-collisions}) and averaging the cell occupation number $N_c$ we obtain
+%
+\begin{equation}
+f = \frac{B\left(M-1+\exp(-M)\right)}{M} ,
+\end{equation}
+%
+where $M=\langle N_C \rangle$ and $N_C$ is Poisson-distributed. $B$ is another characteristic of the collision rule and the values are given by Noguchi\cite{Noguchi:2008}, e.g., $B=1$ for MPC-AT$-a$.
+
+The collisional contribution results from the momentum exchange between particles in the same cell. The shear rate beween two subcells with $n_1$ and $n_2$ particles and average velocities $u_{1x}$ and $u_{2x}$ leads to the collisional stress
+%
+%\begin{equation}
+%\dot{\gamma} = \frac{2}{a} \left(u_{1x}-u_{2x} \right) .
+%%= \frac{n_1 + n_2}{n_2} \frac{2\left(u_{1x}-u_{Cx} \right)}{a} .
+%\end{equation}
+%
+%The momentum transport across a plane between to subcells can be written as
+%
+\begin{equation}
+\sigma^\text{col}_{xy} = - \frac{m}{a^{d-1} h} \left\langle n_1 \left( u_{1x}^* - u_{1x} \right) \right\rangle .
+%= \frac{\rho a}{h} \left( u_{1x} - u_{2x} \right) g ,
+\end{equation}
+%
+The average momentum transfer across a plane can be written as $\left\langle n_1 \left( u_{1x}^* - u_{1x} \right) \right\rangle = - g \dot{\gamma} a/12$ where $g$ depends on the collision rule. Using (\ref{eq:mpc-collisions}) and averaging over $n_1$ and $N_C$ we obtain
+%
+\begin{equation}
+g %= \frac{n_1n_2}{n_1+n_1}
+%= \frac{n_1(N_C-n_1)}{N_C}
+%= \frac{N_C-1}{6}
+= A \left( M-1+\exp(-M) \right)
+,
+\end{equation}
+%
+where it was used that the subcell occupation $n_1$ is binomially distributed. The values for $A$ are given by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. Note that the three correlation factors are related through $s=Af/B = g/M$.
+
+Comparison with the Newtonian viscosity relation $\eta=\sigma_{xy}/\dot{\gamma}$ finally yields
+%
+\begin{align}
+  \begin{split}
+    \eta^\text{kin} &= \frac{\rho k_BT h}{m} \left( \frac{1}{f} - \frac{1}{2} \right) , \\
+    %&= \frac{\rho k_BT h}{m} \left( \frac{M/B}{M-1+\exp(-M)} - \frac{1}{2} \right) ,
+  \end{split}\\
+  \begin{split}
+  \eta^\text{col} &= \frac{m}{12 a^{d-2} h} g . \\%= \frac{\rho a^d m g a^2}{12 m M a^{d} h} = \frac{\rho a^2}{2 h} g \\
+  %&= \frac{\rho a^2}{12h} \frac{A(M-1+\exp(-M))}{M} .
+  \end{split}
+\end{align}
+%
+Note the similarity of the kinetic viscosity with the corresponding expression for the LBM. The latter can indeed be derived with the approach used in this section, which shows that the kinetics of MPC and LBM is very similar. The LBM does not have an analog of the collisional viscosity, however, because the LBM collision process is entirely local and does not transfer momentum. This is an essential difference between particle-based and fully kinetic methods, and MPC can be seen as a bridge between the two.
+
+%The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n$ (particles per cell) is then given by
+%%
+%\begin{equation}
+%  \eta = \frac{n k_BT h}{\Delta x^d} \left( \frac{n}{n-(d+2)/4}-\frac{1}{2} \right)
+%  + \frac{m (n-7/5)}{24 \Delta x^{d-2} h} ,
+%\end{equation}
+%%
+%where $k_BT$ is the imposed temperature and $d=2$ is the dimensionality of the system.
+
+\paragraph{Thermal Conductivity}
+
+Other transport coefficients can be derived along similar lines. In addition to mass and momentum transfer, energy conserving versions of MPC are able to reproduce the heat transfer in the solid. The thermal diffusivity has been derived by Ihle and Kroll\cite{Ihle} and the thermal conductivity by Pooley and Yeomans\cite{Pooley:2005}. A summary of the results is reported in table \ref{tab:mpc-transport-coefficients}.
+
+\begin{table}\centering
+\begin{tabular}{l|l|l}
+\hline
+  & kinetic & collisional\\
+\hline
+Self-Diffusion $D$        & $\frac{B}{A f}-\frac{1}{2}$ & 0 \\
+Viscosity $\nu$           & $\frac{1}{f}-\frac{1}{2}$   & $\frac{A}{12B} f$ \\
+Thermal Conductivity $k$  & TODO & TODO \\
+\hline
+\end{tabular}
+\caption{Generic expression for the kinetic and collisional contributions to the transport coefficients in MPC.}
+\label{tab:mpc-transport-coefficients}
+\end{table}
+
+\paragraph{Parameter choice in practice}
+
+Padding and Louis\dots TODO
 
 \subsection{Boundary Conditions}
 \subsection{Suspended Objects}
 \subsection{Non-ideal fluids and binary mixtures}
-\subsection{Quasi-2D Hydrodynamics}
+\subsection{Viscoelastic fluids}
 \subsection{Applications}
 
 * discuss strength and weakness in comparison with other methods
 * show some applications (star polymers, vesicles, swimmers...)
 * Marisol thermophoresis
+
+\subsection{Quasi-2D Hydrodynamics}
+
+Since the droplets hardly deform in the experiment, we model them as
+rigid discs of radius $R$ that are coupled to the fluid by a no-slip
+boundary condition, i.e., $\vvec' = -\vvec + 2\vvec_\text{b}$ where
+$\vvec_\text{b}$ is the boundary velocity. It is to be noted that this
+is effectively a different boundary condition than the one used in
+deriving Eq.~(\ref{eq:dipole1}), however, we have found in practice
+that this can be accounted for by the calibration procedure described
+below and does not lead to a relevant difference in the
+measurements. To apply the collision rule in the cells that are partly
+or fully occupied by the rigid discs, the corresponding volume is
+filled with virtual particles that are distributed randomly within a
+layer of width $\sqrt{2}a$ and whose velocities are distributed
+according to a Maxwell-Boltzmann distribution around the boundary
+velocity $\vvec_\text{b}$.\cite{Goetze2007} The momentum change of the
+fluid particles during streaming and collisions is accumulated and
+leads to the boundary force $\vec{F}_\text{b}$ that moves the
+discs.\cite{Goetze2011}
+
+On very short distances, hydrodynamics are not resolved and hence we
+add steric droplet-droplet and droplet-wall interactions by means of
+Weeks-Chandler-Anderson (WCA) potentials
+%
+\begin{equation}
+V_\text{WCA}(r) =
+%\begin{cases}
+4\epsilon \left[ \left( \frac{r_0}{r} \right)^{12} - \left(
+\frac{r_0}{r} \right)^6 \right] + \epsilon \qquad 0 < r < 2^{\frac{1}{6}} r_0 ,
+%\end{cases}
+\end{equation}
+%
+where $r = r_{ij} - 2R$ for droplet-droplet interactions, and $r =
+r_{ij} - R$ for droplet-wall interactions. $r_{ij}$ is the distance of
+the droplet centres, or the distance of the droplet centre from the
+wall surface, respectively. To account for the friction at the top and
+bottom of the Hele-Shaw cell, cf. Eq.~(\ref{eq:friction}), we apply a
+friction force $\vec{F}_\text{friction} = -\gamma \, \vec{u}_\text{d}$ to
+the discs where $\vec{u}_\text{d}$ is the velocity of the droplet
+relative to the microchannel. The overall flow is driven by an
+external force $\vec{g}$ corresponding to a constant pressure gradient
+across the channel.
+
+The parameters of the MPC simulations are as follows. The size of a
+collision cell is $\Delta x=R/5$ and the time step is $h =
+0.005\,\tau$, where the time scale is $\tau=(k_BT/m)^{-1/2} \Delta x$,
+and $m$ is the mass of one MPC particle. The fluid density, the
+driving force and the friction are $\rho=40\,m/\Delta x^2$, $g=0.1\,m
+\Delta x/\tau$, and $\gamma=2 \cdot 10^4\,m/\tau$. These parameters
+correspond to a fluid viscosity $\eta=321.77\,m/\tau$. The mass of the
+droplets is given by $M=\rho\pi R^2\approx3140\,m$. The parameters for
+the WCA potential are $\epsilon=k_BT$ and $r_0=\Delta x$. We varied
+the channel width $W$, the droplet spacing $a$, and the initial
+configuration including the initial wavelength $\lambda$ for
+simulating droplet trains in a channel.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
