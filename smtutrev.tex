@@ -22,6 +22,7 @@
 \usepackage{balance} 
 \usepackage{color}
 \usepackage{float}
+\usepackage{array}
 
 \newcommand{\e}[1]{\times10^{#1}}
 \newcommand{\beq}{\begin{equation}}
@@ -248,8 +249,7 @@ Moeendarbary \cite{Moeendarbary:2009, Moeendarbary:2010}.
 
 \clearpage
 
-\subsection{Multi-Particle Collision Dynamics (MPC)}
-
+\section{Multi-Particle Collision Dynamics (MPC)}
 
 \subsubsection{Foundations}
 
@@ -273,7 +273,7 @@ In the collision step, the particles are sorted into cubic collision cells of si
   \vvec^*_i(t) = \uvec_C(t) + \Delta_i(t) ,
 \end{equation}
 %
-where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mass of the cell, respectively, and $\Delta_i$ is a collisional term that does not change $\uvec_C$.
+where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mass of the cell, respectively, and $\Delta_i$ is a collisional term that does not change $\uvec_C$. The center of mass velocity in MPC plays a similar role as the equilibrium distribution in LBM. If the collisional term is set to zero $\Delta_i=0$, all particle velocities ``relax'' to the center of mass velocity instantaneously.
 
 \paragraph{Collision operators}
 
@@ -316,7 +316,7 @@ where $m$ is the particle mass, $N_C$ the number of particles in the collision c
 
 \paragraph{Grid-shifting}
 
-The introduction of the collision cell introduces an artificial reference frame and breaks Galilean invariance. If the mean free path $\lambda=h\sqrt{k_BT/m}$ is smaller than the cell size $a$, repeated collisions between the same particles lead to correlations and the transport coefficients become dependent on imposed flow fields. In order to restore Galilean invariance, Ihle and Kroll introduced a random shift of the cell grid before each collision step.\cite{Ihle2001,and21inGompper} In practice, the shift can be performed by moving all particles by a random vector $\vec{s}$ with components uniformly distributed in $[-a/2,a/2[$ before the collison step and back after the collisions. The grid shift promotes momentum transfer between the cells and thus leads to an additional contribution to the transport coefficients.
+The introduction of the collision cell introduces an artificial reference frame and breaks Galilean invariance. If the mean free path $\lambda=h\sqrt{k_BT/m}$ is smaller than the cell size $a$, repeated collisions between the same particles lead to correlations and the transport coefficients become dependent on imposed flow fields. In order to restore Galilean invariance, Ihle and Kroll introduced a random shift of the cell grid before each collision step.\cite{Ihle2001,and21inGompper} In practice, the shift can be performed by moving all particles by a random vector $\vec{s}$ with components uniformly distributed in $[-a/2,a/2[$ before the collison step and back after the collisions. The grid shift promotes momentum transfer between the cells and thus can lead to additional correlations in the transport coefficients.\cite{someone}
 
 \subsubsection{Transport Coefficients}
 
@@ -338,72 +338,118 @@ In the second approach, transport coefficients are determined through analysis o
 
 Here we outline the latter approach for the MPC-AT collision algorithm. Expressions for other common collision rules are given in table~\ref{}. TODO
 
+\paragraph{Self-Diffusion Coefficient}
+
+The self-diffusion coefficient $D$ can be obtained from  the velocity correlation function
+%
+\begin{equation}
+D= \frac{h}{2} \left\langle v_x^2(0) \right\rangle + h \sum_{k=1}^{\infty} \left\langle v_x(kh) v_x(0) \right\rangle .
+\end{equation}
+%
+The correlation $\left\langle v_x v_x \right\rangle$ is reduced by the streaming step and can be written as $\left\langle v_x^* v_x \right\rangle = (1-s) \left\langle v_x^2 \right\rangle$ or $\left\langle v_x(kh) v_x(0) \right\rangle=(1-s)^k \left\langle v_x^2 \right\rangle$.
+%
+%$A$ is characteristic of the collision algorithm and the explicit values were calculated by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. The function $f$ averages over density fluctuations and is given as
+%
+%\begin{equation}
+%f = \sum_{N_C=1}^{\infty} \left(1-\frac{1}{N_C}\right) \frac{N_C}{M} P(N_C) = \frac{M-1+\exp(-M)}{M} ,
+%\end{equation}
+%
+%where $M=\langle N_C \rangle$ and $P(N_C)=M^{N_C}/N_C! \exp(-M)$ is Poisson-distributed.
+%
+Using (\ref{eq:mpc-collisions}) and averaging over cell occupation number $N_C$ we obtain
+%
+\begin{equation}
+s = \frac{A\left(M-1+\exp(-M)\right)}{M} ,
+\end{equation}
+%
+where $M=\langle N_C \rangle$ and $N_C$ is Poisson distributed. $A$ is characteristic of the collision algorithm and explicit values were calculated by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. The self-diffusion coefficient is then
+%
+\begin{equation}
+  D %= \frac{k_B T h}{m} \left( \sum_{k=0}^{\infty} (1 -s)^k - \frac{1}{2} \right)
+  = \frac{k_B T h}{m} \left( \frac{1}{s} - \frac{1}{2} \right) .
+\end{equation}
+
+\begin{table}\centering
+\begin{tabular}{l|l|l}
+  \hline
+  & A & B \\
+  \hline
+  SRD & $\frac{2}{d}(1-\cos\alpha)$ & $\frac{2}{5}(2-\cos\alpha-\cos2\alpha)$ \\
+  MPC-AT$-a$ & 1 & 1 \\
+  \hline
+\end{tabular}
+\caption{Correlation factors for MPC collision algorithms.}
+\label{tab:mpc-correlation-factors}
+\end{table}
+
 \paragraph{Shear Viscosity}
 
 To determine the shear viscosity, we consider a steady linear shear flow and analyze the force acting on a laminar plane. 
 %
-The kinetic contribution results from the momentum of particles crossing the plane during a time step $h$. The stress can thus be written as\cite{Kikuchi:2003}
+The kinetic contribution results from the momentum of particles crossing the plane during a time step $h$. The stress can thus be written as\cite{Kikuchi:2003,Noguchi:2008}
 %
 \begin{equation}\label{eq:MPCstress1}
 \sigma^\text{kin}_{xy} = \rho \left( \frac{\dot{\gamma} h}{2} \left\langle v_y^2 \right\rangle - \left\langle v_x v_y \right\rangle \right) ,
 \end{equation}
 %
-where the average is taken using the probability distribution $P(v_x-\dot{\gamma}y,v_y)$. Due to the shear flow the correlations $\left\langle v_xv_y \right\rangle$ are non-zero and are changed by both during the streaming and collision steps. 
+where the average is taken using the probability distribution $P(v_x-\dot{\gamma}y,v_y)$. Due to the shear flow the correlations $\left\langle v_xv_y \right\rangle$ are non-zero and are changed by both the streaming and collision steps.
 %
-The streaming step reduces the correlations $\left\langle v_xv_y \right\rangle_{t+h} = \left\langle v_xv_y \right\rangle^* - h \dot{\gamma} \left\langle v_y^2 \right\rangle^*$.
+The streaming step reduces the correlations $\left\langle v_xv_y \right\rangle_{t+h} = \left\langle v_x^*v_y^* \right\rangle_t - h \dot{\gamma} \left\langle v_y^2 \right\rangle$.
 %
-The collision step also reduces the correlations, and after averaging over density fluctuations we have $\left\langle v_xv_y \right\rangle^* = f\left\langle v_xv_y \right\rangle_t$ where $f$ depends on the collision rule. In steady-state the combined effect of streaming and collisions leads to the self-consistency condition $\left\langle v_xv_y \right\rangle = f \left( \left\langle v_xv_y \right\rangle - h \dot{\gamma} \left\langle v_y^2 \right\rangle \right)$, which can be solved and substituted into the stress (\ref{eq:MPCstress1})
-%
-\begin{equation}
-\sigma^\text{kin}_{xy} = \rho \dot{\gamma} h \left\langle v_y^2 \right\rangle \left( \frac{1}{2} + \frac{f}{1-f} \right) .
-\end{equation}
-%
-For MPC-AT we obtain from (\ref{eq:mpc-collisions}) and (\ref{eq:MPC-AT-a})
+The collision step also reduces the correlations, and after averaging over density fluctuations we have $\left\langle v_x^*v_y^* \right\rangle_t = (1-f) \left\langle v_xv_y \right\rangle_t$ where $f$ depends on the collision rule. In steady-state the combined effect of streaming and collisions leads to the self-consistency condition $\left\langle v_xv_y \right\rangle = (1-f) \left( \left\langle v_xv_y \right\rangle - h \dot{\gamma} \left\langle v_y^2 \right\rangle \right)$, which can be solved and substituted into the stress (\ref{eq:MPCstress1})
 %
 \begin{equation}
-f = \frac{1-\exp(-M)}{M} ,
+\sigma^\text{kin}_{xy} = \rho \dot{\gamma} h \left\langle v_y^2 \right\rangle \left( \frac{1}{f} -\frac{1}{2} \right) .
 \end{equation}
 %
-where $M=\langle N_C \rangle$ and $N_C$ is Poisson-distributed.
+Using (\ref{eq:mpc-collisions}) and averaging the cell occupation number $N_c$ we obtain
+%
+\begin{equation}
+f = \frac{B\left(M-1+\exp(-M)\right)}{M} ,
+\end{equation}
+%
+where $M=\langle N_C \rangle$ and $N_C$ is Poisson-distributed. $B$ is another characteristic of the collision rule and the values are given by Noguchi\cite{Noguchi:2008}, e.g., $B=1$ for MPC-AT$-a$.
 
-The collisional contribution results from the momentum exchange between particles in the same cell. The shear rate beween to subcells with average velocities $u_{1x}$ and $u_{2x}$ with average distance $a/2$ is
+The collisional contribution results from the momentum exchange between particles in the same cell. The shear rate beween two subcells with $n_1$ and $n_2$ particles and average velocities $u_{1x}$ and $u_{2x}$ leads to the collisional stress
+%
+%\begin{equation}
+%\dot{\gamma} = \frac{2}{a} \left(u_{1x}-u_{2x} \right) .
+%%= \frac{n_1 + n_2}{n_2} \frac{2\left(u_{1x}-u_{Cx} \right)}{a} .
+%\end{equation}
+%
+%The momentum transport across a plane between to subcells can be written as
 %
 \begin{equation}
-\dot{\gamma} = \frac{2}{a} \left(u_{1x}-u_{2x} \right) .
-%= \frac{n_1 + n_2}{n_2} \frac{2\left(u_{1x}-u_{Cx} \right)}{a} .
+\sigma^\text{col}_{xy} = - \frac{m}{a^{d-1} h} \left\langle n_1 \left( u_{1x}^* - u_{1x} \right) \right\rangle .
+%= \frac{\rho a}{h} \left( u_{1x} - u_{2x} \right) g ,
 \end{equation}
 %
-The momentum transport across a plane between to subcells can be written as
-%
-\begin{equation}
-\sigma^\text{col}_{xy} = - \frac{m}{a^{d-1} h} n_1 \left( u_{1x}^* - u_{1x} \right)
-= \frac{\rho a}{h} \left( u_{1x} - u_{2x} \right) g ,
-\end{equation}
-%
-where $g$ depends on the collision rule. For MPC-AT we obtain from (\ref{eq:mpc-collisions}) and (\ref{eq:MPC-AT-a})
+The average momentum transfer across a plane can be written as $\left\langle n_1 \left( u_{1x}^* - u_{1x} \right) \right\rangle = - g \dot{\gamma} a/12$ where $g$ depends on the collision rule. Using (\ref{eq:mpc-collisions}) and averaging over $n_1$ and $N_C$ we obtain
 %
 \begin{equation}
 g %= \frac{n_1n_2}{n_1+n_1}
 %= \frac{n_1(N_C-n_1)}{N_C}
 %= \frac{N_C-1}{6}
-= \frac{M-1+\exp(-M)}{6M}
+= A \left( M-1+\exp(-M) \right)
 ,
 \end{equation}
 %
-where it was used that $n_1$ is binomially distributed.
+where it was used that the subcell occupation $n_1$ is binomially distributed. The values for $A$ are given by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. Note that the three correlation factors are related through $s=Af/B = g/M$.
 
 Comparison with the Newtonian viscosity relation $\eta=\sigma_{xy}/\dot{\gamma}$ finally yields
 %
 \begin{align}
   \begin{split}
-    \eta^\text{kin} &= \frac{\rho k_BT h}{m} \left( \frac{1}{2} + \frac{f}{1-f} \right) \\
-    &= \frac{\rho k_BT h}{m} \left( \frac{M}{M-1+\exp(-M)} - \frac{1}{2} \right) , 
+    \eta^\text{kin} &= \frac{\rho k_BT h}{m} \left( \frac{1}{f} - \frac{1}{2} \right) , \\
+    %&= \frac{\rho k_BT h}{m} \left( \frac{M/B}{M-1+\exp(-M)} - \frac{1}{2} \right) ,
   \end{split}\\
-\begin{split}
-  \eta^\text{col} &= \frac{\rho a^2}{2 h} g \\
-  &= \frac{\rho a^2}{12 h} \frac{M-1+\exp(-M)}{M} .
-\end{split}
+  \begin{split}
+  \eta^\text{col} &= \frac{m}{12 a^{d-2} h} g . \\%= \frac{\rho a^d m g a^2}{12 m M a^{d} h} = \frac{\rho a^2}{2 h} g \\
+  %&= \frac{\rho a^2}{12h} \frac{A(M-1+\exp(-M))}{M} .
+  \end{split}
 \end{align}
+%
+Note the similarity of the kinetic viscosity with the corresponding expression for the LBM. The latter can indeed be derived with the approach used in this section, which shows that the kinetics of MPC and LBM is very similar. The LBM does not have an analog of the collisional viscosity, however, because the LBM collision process is entirely local and does not transfer momentum. This is an essential difference between particle-based and fully kinetic methods, and MPC can be seen as a bridge between the two.
 
 %The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n$ (particles per cell) is then given by
 %%
@@ -414,27 +460,27 @@ Comparison with the Newtonian viscosity relation $\eta=\sigma_{xy}/\dot{\gamma}$
 %%
 %where $k_BT$ is the imposed temperature and $d=2$ is the dimensionality of the system.
 
-\paragraph{Thermal Diffusivity}
+\paragraph{Thermal Conductivity}
 
-Along similar lines
+Other transport coefficients can be derived along similar lines. In addition to mass and momentum transfer, energy conserving versions of MPC are able to reproduce the heat transfer in the solid. The thermal diffusivity has been derived by Ihle and Kroll\cite{Ihle} and the thermal conductivity by Pooley and Yeomans\cite{Pooley:2005}. A summary of the results is reported in table \ref{tab:mpc-transport-coefficients}.
 
-\paragraph{Self-Diffusion Coefficient}
-
-* equation of state
-* viscosity
-* diffusion (thermal and particle)
-* qualitatively: kinetic and collisional contributions
-* projection operator and Green-Kubo
-* kinetic theory non-equilibrium steady-state
-
-\begin{tabular}{ll}
-kinetic & collisional\\
+\begin{table}\centering
+\begin{tabular}{l|l|l}
+\hline
+  & kinetic & collisional\\
+\hline
+Self-Diffusion $D$        & $\frac{B}{A f}-\frac{1}{2}$ & 0 \\
+Viscosity $\nu$           & $\frac{1}{f}-\frac{1}{2}$   & $\frac{A}{12B} f$ \\
+Thermal Conductivity $k$  & TODO & TODO \\
 \hline
 \end{tabular}
+\caption{Generic expression for the kinetic and collisional contributions to the transport coefficients in MPC.}
+\label{tab:mpc-transport-coefficients}
+\end{table}
 
 \paragraph{Parameter choice in practice}
 
-Padding and Louis
+Padding and Louis\dots TODO
 
 \subsubsection{Boundary Conditions}
 \subsubsection{Suspended Objects}
