@@ -386,10 +386,10 @@ where $\vec{\hat{a}}$ is a randomly chosen axis, $\alpha$ the rotation angle, an
 Instead of rotating the relative particle velocities, it is also possible to dampen the velocities with a Langevin thermostat (MPC-LD) or simply generate new relative velocities randomly. The latter is implemented by the algorithm
 %
 \begin{equation}\label{eq:MPC-AT-a}
-\Delta^\text{AT}_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} ,
+\Delta^\text{AT}_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{n_C} ,
 \end{equation}
 %
-where $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution, and $N_C$ is the number of particles in the collision cell. This collision operator is denoted as MPC-AT$-a$ in the nomenclature of Noguchi.\cite{Noguchi2008}. The random velocity serves as an Anderson-like thermostat to control the temperature, such that the simulation is effectively performed in a (local) canonical ensemble. Consequently, MPC-AT collision rules do not conserve energy.
+where $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution, and $n_C$ is the number of particles in the collision cell. This collision operator is denoted as MPC-AT$-a$ in the nomenclature of Noguchi.\cite{Noguchi2008}. The random velocity serves as an Anderson-like thermostat to control the temperature, such that the simulation is effectively performed in a (local) canonical ensemble. Consequently, MPC-AT collision rules do not conserve energy.
 
 A drawback of both MPC-SR$-a$ and MPC-AT$-a$ algorithms is that they generate a non-symmetric stress tensor and hence do not conserve angular momentum, as indicated by the suffix $-a$.\cite{Pooley&Yeomans,and28fromGompper} This can be mitigated by imposing angular momentum conservation as a constraint, which leads to an additional term in the collision rule
 %
@@ -400,16 +400,16 @@ A drawback of both MPC-SR$-a$ and MPC-AT$-a$ algorithms is that they generate a 
 \end{multlined}
 \end{equation}
 %
-where $m$ is the particle mass, $N_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, and $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position. The angular momentum conserving collision rules are denoted by the suffix $+a$, e.g., the momentum conserving version of the Anderson thermostat is MPC-AT$+a$
+where $m$ is the particle mass, $n_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, and $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position. The angular momentum conserving collision rules are denoted by the suffix $+a$, e.g., the momentum conserving version of the Anderson thermostat is MPC-AT$+a$ and can be implemented as
 %
 \begin{equation}\label{eq:MPC-AT+a}
  \begin{multlined}
-  \Delta^{\text{AT$+a$}}_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} \\- \rvec_{i,C}(t) \times m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_{j}(t) - \vvec_j^\text{ran} \right) \right] .
+  \Delta^{\text{AT$+a$}}_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{n_C} \\- \rvec_{i,C}(t) \times m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_{j}(t) - \vvec_j^\text{ran} \right) \right] .
 %+ m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_{j}(t) - \vvec_j^\text{ran} \right) \right]  \times \rvec_{i,C}(t) ,
 \end{multlined}
 \end{equation}
 %
-MPC-LD and MPC-AT and MPC-SR with the $\Delta^{+a}$ term do not conserve kinetic energy. For MPC-SR a velocity rescaling can be applied to conserve energy, however, this breaks time-reversal symmetry and leads to deviations in the radial distribution function.\cite{Noguchi:2008} A collision operator that conserves both energy and angular momentum can be derived in two dimensions.\cite{Ryder} Various other collision rules have been proposed in the literature, and we refer the interested reader to the comprehensive overview by Gompper\cite{Gompper:2009}.
+MPC-LD and MPC-AT and MPC-SR with the $\Delta^{+a}$ term do not conserve kinetic energy. For MPC-SR a velocity rescaling can be applied to conserve energy, however, this breaks time-reversal symmetry and leads to deviations in the radial distribution function.\cite{Noguchi:2008} A collision operator that conserves both energy and angular momentum can be derived in two dimensions.\cite{Ryder} Various other collision rules have been proposed in the literature, and we refer to the comprehensive overview by Gompper\cite{Gompper:2009}.
 
 \paragraph{Grid-shifting}
 
@@ -433,8 +433,6 @@ The corresponding transport coefficients emerge from the micro-scale transport d
 
 In the second approach, transport coefficients are determined through analysis of non-equilibrium steady-state situations. By virtue of the fluctuation-dissipation theorem, the linear response of the system to imposed gradients allows to calculate transport coefficients that are identical to the ones obtained from equilibrium fluctuations. This approach has been used by \dots TODO
 
-Here we outline the latter approach for the MPC-AT collision algorithm. Expressions for other common collision rules are given in table~\ref{}. TODO
-
 \paragraph{Self-Diffusion Coefficient}
 
 The self-diffusion coefficient $D$ can be obtained from  the velocity correlation function
@@ -443,23 +441,13 @@ The self-diffusion coefficient $D$ can be obtained from  the velocity correlatio
 D= \frac{h}{2} \left\langle v_x^2(0) \right\rangle + h \sum_{k=1}^{\infty} \left\langle v_x(kh) v_x(0) \right\rangle .
 \end{equation}
 %
-The correlation $\left\langle v_x v_x \right\rangle$ is reduced by the streaming step and can be written as $\left\langle v_x^* v_x \right\rangle = (1-s) \left\langle v_x^2 \right\rangle$ or $\left\langle v_x(kh) v_x(0) \right\rangle=(1-s)^k \left\langle v_x^2 \right\rangle$.
-%
-%$A$ is characteristic of the collision algorithm and the explicit values were calculated by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. The function $f$ averages over density fluctuations and is given as
-%
-%\begin{equation}
-%f = \sum_{N_C=1}^{\infty} \left(1-\frac{1}{N_C}\right) \frac{N_C}{M} P(N_C) = \frac{M-1+\exp(-M)}{M} ,
-%\end{equation}
-%
-%where $M=\langle N_C \rangle$ and $P(N_C)=M^{N_C}/N_C! \exp(-M)$ is Poisson-distributed.
-%
-Using (\ref{eq:mpc-collisions}) and averaging over cell occupation number $N_C$ we obtain
+The correlation $\left\langle v_x v_x \right\rangle$ is reduced by the streaming step and can be written as $\left\langle v_x^* v_x \right\rangle = (1-s) \left\langle v_x^2 \right\rangle$ or $\left\langle v_x(kh) v_x(0) \right\rangle=(1-s)^k \left\langle v_x^2 \right\rangle$. The correlation factor $s$ can be written in the form $s=Af$, where $m$ is determined by averaging over a Poisson distribution for the cell occupation number $n_C$ with $\langle n_C \rangle = N$
 %
 \begin{equation}
-s = \frac{A\left(M-1+\exp(-M)\right)}{M} ,
+  f = \sum_{n_C=1}^{\infty} \left(1-\frac{1}{n_C}\right) \frac{n_C}{N} P(n_C) = \frac{N-1+\exp(-N)}{N}
 \end{equation}
 %
-where $M=\langle N_C \rangle$ and $N_C$ is Poisson distributed. $A$ is characteristic of the collision algorithm and explicit values were calculated by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. The self-diffusion coefficient is then
+A is characteristic of the collision algorithm and the explicit values were calculated by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. The self-diffusion coefficient is then
 %
 \begin{equation}
   D %= \frac{k_B T h}{m} \left( \sum_{k=0}^{\infty} (1 -s)^k - \frac{1}{2} \right)
@@ -467,29 +455,27 @@ where $M=\langle N_C \rangle$ and $N_C$ is Poisson distributed. $A$ is character
 \end{equation}
 
 \begin{table}\centering
-\begin{tabular}{l|l|l}
+\begin{tabular}{l|l|l|l}
   \hline
-  & A & B \\
+  & $A$ & $B$ \\
   \hline
-  SRD & $\frac{2}{d}(1-\cos\alpha)$ & $\frac{2}{5}(2-\cos\alpha-\cos2\alpha)$ \\
-  MPC-AT$-a$ & 1 & 1 \\
+  MPC-SR & $\frac{2}{d}(1-\cos\alpha)$ & $1-\cos2\alpha$ & $d=2$ \\
+  & & $\frac{2}{5}(2-\cos\alpha-\cos2\alpha)$ & $d=3$ \\
+  MPC-LD & $\frac{\gamma h/m}{1+\gamma h/2m}$ & $\frac{2\gamma h/m}{(1+\gamma h/2m)^2}$ \\
+  MPC-AT & $1$ & $1$ \\
   \hline
 \end{tabular}
-\caption{Correlation factors for MPC collision algorithms.}
-\label{tab:mpc-correlation-factors}
-\end{table}
-
-\begin{table}\centering
+\vspace*{\baselineskip}\\
 \begin{tabular}{llll}
 \hline
-  & $s$ & $f$ & $g$ \\
+  & $s$ & $c$ & $g$ \\
 \hline
-  SRC        & $A\frac{M-1+\exp(-M)}{M}$ & $B\frac{M-1+\exp(-M)}{M}$ & $A\left(M-1+\exp(-M)\right)$ \\
-  MPC-AT$-a$ & $\frac{M-1+\exp(-M)}{M}$  & $\frac{M-1+\exp(-M)}{M}$ & $\left(M-1+\exp(-M)\right)$\\
-  MPC-AT$+a$ & $\frac{2M-(d+1)}{2M}$     & $\frac{4M-(d+2)}{4M}$ & $\frac{5M-7}{10}$ \\
+  MPC$-a$ & $Af$ & $Bf$ & $MAf$ \\
+  MPC$+a$ & $A\left(1-\frac{d+1}{2N}\right)$ & $\frac{Ad}{2N}+B\left(1-\frac{3d+2}{4N}\right)$ & $A\frac{5N-7}{10}$ \\
 \hline
 \end{tabular}
-\caption{Correlation factors for MPC collision algorithms.}
+\caption{Correlation factors for MPC collision algorithms. Note that the MPC$+a$ expressions for $s$, $c$, and $g$ are approximations for large $N$. For small $N$ additional correction terms have to be taken into account.\cite{Noguchi:2008}}
+\label{tab:mpc-correlation-factors}
 \end{table}
 
 \paragraph{Shear Viscosity}
@@ -506,19 +492,13 @@ where the average is taken using the probability distribution $P(v_x-\dot{\gamma
 %
 The streaming step reduces the correlations $\left\langle v_xv_y \right\rangle_{t+h} = \left\langle v_x^*v_y^* \right\rangle_t - h \dot{\gamma} \left\langle v_y^2 \right\rangle$.
 %
-The collision step also reduces the correlations, and after averaging over density fluctuations we have $\left\langle v_x^*v_y^* \right\rangle_t = (1-f) \left\langle v_xv_y \right\rangle_t$ where $f$ depends on the collision rule. In steady-state the combined effect of streaming and collisions leads to the self-consistency condition $\left\langle v_xv_y \right\rangle = (1-f) \left( \left\langle v_xv_y \right\rangle - h \dot{\gamma} \left\langle v_y^2 \right\rangle \right)$, which can be solved and substituted into the stress (\ref{eq:MPCstress1})
+The collision step also reduces the correlations, and after averaging over density fluctuations we have $\left\langle v_x^*v_y^* \right\rangle_t = (1-c) \left\langle v_xv_y \right\rangle_t$ where $f$ depends on the collision rule. In steady-state the combined effect of streaming and collisions leads to the self-consistency condition $\left\langle v_xv_y \right\rangle = (1-c) \left( \left\langle v_xv_y \right\rangle - h \dot{\gamma} \left\langle v_y^2 \right\rangle \right)$, which can be solved and substituted into the stress (\ref{eq:MPCstress1})
 %
 \begin{equation}
-\sigma^\text{kin}_{xy} = \rho \dot{\gamma} h \left\langle v_y^2 \right\rangle \left( \frac{1}{f} -\frac{1}{2} \right) .
+\sigma^\text{kin}_{xy} = \rho \dot{\gamma} h \left\langle v_y^2 \right\rangle \left( \frac{1}{c} -\frac{1}{2} \right) .
 \end{equation}
 %
-Using (\ref{eq:mpc-collisions}) and averaging the cell occupation number $N_c$ we obtain
-%
-\begin{equation}
-f = \frac{B\left(M-1+\exp(-M)\right)}{M} ,
-\end{equation}
-%
-where $M=\langle N_C \rangle$ and $N_C$ is Poisson-distributed. $B$ is another characteristic of the collision rule and the values are given by Noguchi\cite{Noguchi:2008}, e.g., $B=1$ for MPC-AT$-a$.
+The correlation factor $c$ can be written in the form $c=Bf$, where $B$ is another characteristic of the collision rule with values given by Noguchi\cite{Noguchi:2008}, e.g., $B=1$ for MPC-AT$-a$.
 
 The collisional contribution results from the momentum exchange between particles in the same cell. The shear rate beween two subcells with $n_1$ and $n_2$ particles and average velocities $u_{1x}$ and $u_{2x}$ leads to the collisional stress
 %
@@ -534,34 +514,20 @@ The collisional contribution results from the momentum exchange between particle
 %= \frac{\rho a}{h} \left( u_{1x} - u_{2x} \right) g ,
 \end{equation}
 %
-The average momentum transfer across a plane can be written as $\left\langle n_1 \left( u_{1x}^* - u_{1x} \right) \right\rangle = - g \dot{\gamma} a/12$ where $g$ depends on the collision rule. Using (\ref{eq:mpc-collisions}) and averaging over $n_1$ and $N_C$ we obtain
-%
-\begin{equation}
-g %= \frac{n_1n_2}{n_1+n_1}
-%= \frac{n_1(N_C-n_1)}{N_C}
-%= \frac{N_C-1}{6}
-= A \left( M-1+\exp(-M) \right)
-,
-\end{equation}
-%
-where it was used that the subcell occupation $n_1$ is binomially distributed. The values for $A$ are given by Noguchi\cite{Noguchi:2008}, e.g., $A=1$ for MPC-AT$-a$. Note that the three correlation factors are related through $s=Af/B = g/M$.
-
-Comparison with the Newtonian viscosity relation $\eta=\sigma_{xy}/\dot{\gamma}$ finally yields
+The average momentum transfer across a plane can be written as $\left\langle n_1 \left( u_{1x}^* - u_{1x} \right) \right\rangle = - g \dot{\gamma} a/12$ where $g$ depends on the collision rule and is of the form $g=MAf$. This can be derived by using that the subcell occupation $n_1$ is binomially distributed.\cite{Kikuchi:2003} Comparison with the Newtonian viscosity relation $\eta=\sigma_{xy}/\dot{\gamma}$ finally yields
 %
 \begin{align}
   \begin{split}
-    \eta^\text{kin} &= \frac{\rho k_BT h}{m} \left( \frac{1}{f} - \frac{1}{2} \right) , \\
-    %&= \frac{\rho k_BT h}{m} \left( \frac{M/B}{M-1+\exp(-M)} - \frac{1}{2} \right) ,
+    \eta^\text{kin} &= \frac{\rho k_BT h}{m} \left( \frac{1}{f} - \frac{1}{2} \right) ,
   \end{split}\\
   \begin{split}
-  \eta^\text{col} &= \frac{m}{12 a^{d-2} h} g . \\%= \frac{\rho a^d m g a^2}{12 m M a^{d} h} = \frac{\rho a^2}{2 h} g \\
-  %&= \frac{\rho a^2}{12h} \frac{A(M-1+\exp(-M))}{M} .
+  \eta^\text{col} &= \frac{m}{12 a^{d-2} h} g .
   \end{split}
 \end{align}
 %
-Note the similarity of the kinetic viscosity with the corresponding expression for the LBM. The latter can indeed be derived with the approach used in this section, which shows that the kinetic viscosity of both MPC and LBM is that of an ideal gas. The LBM does not have an analog of the collisional viscosity, however, because the LBM collision process is entirely local and does not transfer momentum. This is an essential difference between particle-based and fully kinetic methods, and MPC can be seen as a bridge between the two.
+For the collision rules without angular momentum conservation, the correlation factors $s$, $c$, and $g$ are related through $s = Ac/B = g/M$. For angular momentum conserving collision rules, additional correlations are present which result in more complicated expressions. The results are summarized in table \ref{tab:mpc-correlation-factors}.
 
-For angular momentum conserving collision rules, additional correlations are present which results in\dots
+The similarity of the kinetic viscosity with the corresponding expression for the LBM should be noted. The latter can indeed be derived with the approach used in this section, which shows that the kinetic viscosity of both MPC and LBM is that of an ideal gas. The LBM does not have an analog of the collisional viscosity, however, because the LBM collision process is entirely local and does not transfer momentum. This is an essential difference between particle-based and fully kinetic methods, and MPC can be seen as a bridge between the two.
 
 %The dynamic viscosity $\eta$ of the MPC-AT+$a$ fluid for large number density $n$ (particles per cell) is then given by
 %%
@@ -574,7 +540,7 @@ For angular momentum conserving collision rules, additional correlations are pre
 
 \paragraph{Thermal Transport}
 
-Other transport coefficients can be derived along similar lines. In addition to mass and momentum transfer, energy conserving versions of MPC are able to reproduce the heat transfer in the fluid. The thermal diffusivity has been derived by Ihle and Kroll\cite{Ihle} and the thermal conductivity by Pooley and Yeomans\cite{Pooley:2005}. A summary of the results is reported in table \ref{tab:mpc-transport-coefficients}.
+Other transport coefficients can be derived along similar lines. In addition to mass and momentum transfer, the energy conserving versions of MPC are able to reproduce the heat transfer in the fluid. The thermal diffusivity has been derived by Ihle and Kroll\cite{Ihle} and the thermal conductivity by Pooley and Yeomans\cite{Pooley:2005}. A summary of the results is reported in table \ref{tab:mpc-transport-coefficients}.
 
 \begin{table}\centering
 \begin{tabular}{l|l|l}
