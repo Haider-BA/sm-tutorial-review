@@ -368,39 +368,48 @@ where $\rvec_C$ and $\uvec_C$ are the position and velocity of the center of mas
 The original algorithm introduced by Malevanets and Kapral \cite{Malevanets:1999} is referred to as stochastic rotation dynamics (SRD). It consists of a random rotation of the relative velocities $\vvec_{i,C} = \vvec_i-\uvec_C$ of the particles in a cell% around a randomly chosen axis $\vec{\hat{a}}$ by an angle $\alpha$.
 %
 \begin{equation}\label{eq:srd}
-  \Delta_i(t) = \tens{R}^\text{ran} \vvec_{i,C}(t) .
+  \Delta^\text{SR}_i(t) = \tens{R}^\text{ran} \vvec_{i,C}(t) .
 \end{equation}
 %
 The rotation $\tens{R}_{\vec{\hat{a}},\alpha}$ is commonly implemented as
 %
 \begin{equation}
   \begin{multlined}
-    \Delta_i(t) = \vvec_{i,C}^{\parallel}(t)
+    \Delta^\text{SR}_i(t) = \vvec_{i,C}^{\parallel}(t)
     + \vvec_{i,C}^{\perp}(t) \cos(\alpha) \\
     + \left(\vvec_{i,C}^{\perp}(t) \times \vec{\hat{a}}\right) \sin(\alpha) ,
   \end{multlined}
 \end{equation}
 %
-where $\vec{\hat{a}}$ is a randomly chosen axis, $\alpha$ the rotation angle, and $\vvec_{i,C}^{\parallel}$ and $\vvec_{i,C}^{\perp}$ denote the parallel and perpedicular components of $\Delta\vvec_i$ with respect to the random axis $\vec{\hat{a}}$.
+where $\vec{\hat{a}}$ is a randomly chosen axis, $\alpha$ the rotation angle, and $\vvec_{i,C}^{\parallel}$ and $\vvec_{i,C}^{\perp}$ denote the parallel and perpedicular components of $\Delta\vvec_i$ with respect to the random axis $\vec{\hat{a}}$. This collision rule is denoted as MPC-SR$-a$ in the nomenclature of Noguchi.\cite{Noguchi:2008} An alternative version is MPC-RA, where the rotation angle $\alpha$ is also drawn randomly.
 
-Instead of rotating the relative particle velocities, it is also possible to generate new relative velocities randomly. This is implemented by the algorithm
+Instead of rotating the relative particle velocities, it is also possible to dampen the velocities with a Langevin thermostat (MPC-LD) or simply generate new relative velocities randomly. The latter is implemented by the algorithm
 %
 \begin{equation}\label{eq:MPC-AT-a}
-\Delta_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} ,
+\Delta^\text{AT}_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} ,
 \end{equation}
 %
-where $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution, and $N_C$ is the number of particles in the collision cell. This collision operator is referred toas MPC-AT$-a$ in the nomenclature of Noguchi.\cite{Noguchi2008}. The random velocity serves as an Anderson-like thermostat to control the temperature, such that the simulation is effectively performed in a canonical ensemble. Consequently, AT collision rules do not conserve energy.
+where $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution, and $N_C$ is the number of particles in the collision cell. This collision operator is denoted as MPC-AT$-a$ in the nomenclature of Noguchi.\cite{Noguchi2008}. The random velocity serves as an Anderson-like thermostat to control the temperature, such that the simulation is effectively performed in a (local) canonical ensemble. Consequently, MPC-AT collision rules do not conserve energy.
 
-A drawback of both SRD and MPC-AT$-a$ algorithms is that they generate a non-symmetric stress tensor and hence do not conserve angular momentum.\cite{Pooley&Yeomans,and28fromGompper} This can be mitigated by imposing angular momentum conservation as a constraint, which leads to the collision rule
+A drawback of both MPC-SR$-a$ and MPC-AT$-a$ algorithms is that they generate a non-symmetric stress tensor and hence do not conserve angular momentum, as indicated by the suffix $-a$.\cite{Pooley&Yeomans,and28fromGompper} This can be mitigated by imposing angular momentum conservation as a constraint, which leads to an additional term in the collision rule
 %
 \begin{equation}
 \begin{multlined}
-\Delta_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} \\
-+ m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_j(t) - \vvec_j^\text{ran} \right) \right]  \times \rvec_{i,C}(t) ,
+  \Delta^{+a}_i(t) = - \rvec_{i,C}(t) \times m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_{j,C}(t) - \Delta_j(t) \right) \right]
+%+ m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_{j}(t) - \vvec_j^\text{ran} \right) \right]  \times \rvec_{i,C}(t) ,
 \end{multlined}
 \end{equation}
 %
-where $m$ is the particle mass, $N_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position, and $\vvec_i^\text{ran}$ is a random velocity drawn from a Maxwell-Boltzmann distribution. This collision operator is denoted as MPC-AT+$a$ and like MPC-AT$-a$ it does not conserve energy. A collision operator that conserves both energy and angular momentum can be derived in two dimensions. Various other collision rules have been proposed in the literature\dots TODO
+where $m$ is the particle mass, $N_C$ the number of particles in the collision cell, $\tens{I}$ the moment of inertia tensor, and $\rvec_{i,C}=\rvec_i - \rvec_C$ the relative particle position. The angular momentum conserving collision rules are denoted by the suffix $+a$, e.g., the momentum conserving version of the Anderson thermostat is MPC-AT$+a$
+%
+\begin{equation}\label{eq:MPC-AT+a}
+ \begin{multlined}
+  \Delta^{\text{AT$+a$}}_i(t) = \vvec_i^\text{ran} - \sum_{j\in C} \frac{\vvec_j^\text{ran}}{N_C} \\- \rvec_{i,C}(t) \times m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_{j}(t) - \vvec_j^\text{ran} \right) \right] .
+%+ m \tens{I}^{-1} \sum_{j\in C} \left[ \rvec_{j,C}(t) \times \left( \vvec_{j}(t) - \vvec_j^\text{ran} \right) \right]  \times \rvec_{i,C}(t) ,
+\end{multlined}
+\end{equation}
+%
+MPC-LD and MPC-AT and MPC-SR with the $\Delta^{+a}$ term do not conserve kinetic energy. For MPC-SR a velocity rescaling can be applied to conserve energy, however, this breaks time-reversal symmetry and leads to deviations in the radial distribution function.\cite{Noguchi:2008} A collision operator that conserves both energy and angular momentum can be derived in two dimensions.\cite{Ryder} Various other collision rules have been proposed in the literature, and we refer the interested reader to the comprehensive overview by Gompper\cite{Gompper:2009}.
 
 \paragraph{Grid-shifting}
 
