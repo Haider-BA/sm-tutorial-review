@@ -242,8 +242,10 @@ when the stochastic Wiener process in the Langevin Equation is discretised.
 \subsection{Hydrodynamic Interactions}
 
 Solvent-mediated hydrodynamic interactions between the solute particles are usually not included
- in Langevin dynamics. But these can be reintroduced by means of the Oseen tensor. If inertia 
-terms are discarded, then Eq. \ref{LD} can be rephrased into
+ in Langevin dynamics. But these can be reintroduced by means of the Rotne-Prager-Yamakawa tensor, 
+a refinement of the Oseen tensor in the non-dilute limit. 
+
+If inertia terms are discarded, then Eq. \ref{LE} can be rephrased into
 
 \beq
 \dot{\mathbf{r}}_i = \frac{1}{\gamma} \mathbf{F}_i^C +\sqrt{\frac{2 k_B T}{\gamma}} \mathbf{\zeta}_i(t).
